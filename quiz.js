@@ -73,7 +73,7 @@ const Quiz = (() => {
     else { main = q.word.w; sub = '選出正確讀音'; }
     box.innerHTML = `
       <div class="qhd"><span>${current+1} / ${questions.length}</span><span>正確: ${score}</span><button class="qclose" style="width:auto;margin:0;padding:2px 10px" onclick="Quiz.close()">✕</button></div>
-      <div class="qprompt"><div class="qmain">${main}</div>${sub?'<div class="qsub">'+sub+'</div>':''}</div>
+      <div class="qprompt"><div class="qmain">${main}</div>${sub?'<div class="qsub">'+sub+'</div>':''}<div style="margin-top:6px"><svg class="spk" style="width:22px;height:22px;opacity:.5" onclick="speak('${q.word.w.replace(/'/g,"\\'")}')" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/></svg></div></div>
       <div class="qopts">${q.options.map((o,i) => '<button class="qopt" onclick="Quiz.answer('+i+')">'+disp(o)+'</button>').join('')}</div>`;
   }
 

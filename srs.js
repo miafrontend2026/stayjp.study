@@ -84,6 +84,7 @@ const SRS = (() => {
         <div class="srs-front" id="srsFront">
           <div class="qmain">${item.w}</div>
           ${item.w!==item.r?'<div class="qsub">'+item.r+'</div>':''}
+          <div style="margin:8px 0"><svg class="spk" style="width:24px;height:24px;opacity:.6" onclick="event.stopPropagation();speak('${item.w.replace(/'/g,"\\'")}')" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/></svg></div>
           <div class="srs-hint">點擊翻面查看答案</div>
         </div>
         <div class="srs-back" id="srsBack" style="display:none">

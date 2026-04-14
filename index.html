@@ -118,6 +118,18 @@ body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Noto Sans TC","Ping
 .vi .star{width:18px;height:18px;cursor:pointer;fill:none;stroke:#ccc;stroke-width:2;transition:.2s;flex-shrink:0;margin-top:2px}
 .vi .star:hover{stroke:var(--ac)}
 .vi .star.on{fill:var(--ac);stroke:var(--ac)}
+.spk{width:20px;height:20px;cursor:pointer;fill:none;stroke:var(--ac2);stroke-width:2;flex-shrink:0;margin-top:2px;opacity:.5;transition:.2s;-webkit-tap-highlight-color:transparent}
+.spk:hover,.spk:active{opacity:1}
+/* Daily mode */
+.daily-bar{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.daily-bar .dp{flex:1;min-width:120px}
+.daily-bar .dp-lbl{font-size:11px;color:var(--tx2);margin-bottom:3px}
+.daily-bar .dp-bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden}
+.daily-bar .dp-fill{height:100%;background:var(--ac2);border-radius:4px;transition:.3s}
+.daily-bar .dp-txt{font-size:12px;color:var(--tx);margin-top:2px;font-weight:600}
+.daily-btn{padding:6px 14px;border:1px solid var(--ac2);background:none;color:var(--ac2);border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:.2s;white-space:nowrap}
+.daily-btn:hover{background:var(--ac2);color:#fff}
+.daily-btn.on{background:var(--ac2);color:#fff}
 @media(max-width:860px){
   :root{--hh-m:96px}
   .hd{padding:6px 10px;gap:6px;align-content:center}
@@ -271,6 +283,7 @@ body{font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN","Noto Sans TC","Ping
   <span class="stats" id="stats"></span>
   <button class="act-btn" onclick="Quiz.start()">測驗</button>
   <button class="act-btn" id="reviewBtn" onclick="SRS.start()">複習</button>
+  <button class="act-btn" onclick="GrammarDrill.start()">文法練</button>
   <button class="act-btn" onclick="Stats.open()">統計</button>
   <button class="auth-btn" id="authBtn" onclick="handleAuth()">登入</button>
 </header>
@@ -482,6 +495,57 @@ function doRender() {
   else render();
 }
 
+// ========== TTS ==========
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ja-JP';
+  u.rate = 0.85;
+  // Try to find Japanese voice
+  const voices = speechSynthesis.getVoices();
+  const jaVoice = voices.find(v => v.lang.startsWith('ja'));
+  if (jaVoice) u.voice = jaVoice;
+  speechSynthesis.speak(u);
+}
+// Preload voices
+if (window.speechSynthesis) speechSynthesis.getVoices();
+
+// ========== DAILY MODE ==========
+let dailyMode = false;
+const DAILY_NEW = 20;
+const DAILY_KEY = 'daily_progress';
+
+function getDailyProgress(lv) {
+  try {
+    const d = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}');
+    const today = new Date().toISOString().split('T')[0];
+    if (!d[lv] || d[lv].date !== today) return { date: today, learned: 0, offset: d[lv] ? d[lv].totalOffset || 0 : 0, totalOffset: d[lv] ? d[lv].totalOffset || 0 : 0 };
+    return d[lv];
+  } catch(e) { return { date: new Date().toISOString().split('T')[0], learned: 0, offset: 0, totalOffset: 0 }; }
+}
+function saveDailyProgress(lv, prog) {
+  try {
+    const d = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}');
+    d[lv] = prog;
+    localStorage.setItem(DAILY_KEY, JSON.stringify(d));
+  } catch(e) {}
+}
+function toggleDailyMode() {
+  dailyMode = !dailyMode;
+  doRender();
+}
+function nextDailyBatch() {
+  const lv = currentLevel;
+  const data = getVocabData(lv);
+  const prog = getDailyProgress(lv);
+  prog.totalOffset = Math.min(prog.totalOffset + DAILY_NEW, data.length);
+  prog.date = new Date().toISOString().split('T')[0];
+  saveDailyProgress(lv, prog);
+  doRender();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 // ========== N5 DATA ==========
 const N5 = [
 {id:"n5-1",cat:"基本句型",t:"～です・～じゃありません（名詞）",p:"名詞＋です／じゃありません",ex:"肯定「です」，否定「じゃありません」。普通體：だ／じゃない。",eg:[{j:"佐藤さんは<em>会社員です</em>。",z:"佐藤是公司職員。"},{j:"鈴木さんは学生<em>じゃありません</em>。",z:"鈴木不是學生。"}]},
@@ -673,6 +737,14 @@ function renderVocab() {
   if (lf) filtered = filtered.filter(d => d.w.includes(lf)||d.r.includes(lf)||d.m.includes(lf));
   if (showFavOnly) filtered = filtered.filter(d => favList.includes(d.w));
 
+  // Daily mode: limit to today's batch
+  const prog = getDailyProgress(currentLevel);
+  if (dailyMode && !lf && !showFavOnly) {
+    const start = prog.totalOffset;
+    const end = Math.min(start + DAILY_NEW, data.length);
+    filtered = data.slice(start, end);
+  }
+
   const groups = {};
   VOCAB_CATS.forEach(c => groups[c.key] = []);
   filtered.forEach(d => { if(groups[d.c]) groups[d.c].push(d); else if(!groups['他']) groups['他']=[d]; else groups['他'].push(d); });
@@ -681,8 +753,23 @@ function renderVocab() {
   if (!lf && !showFavOnly) {
     const lv = currentLevel.toUpperCase();
     const cnt = data.length;
-    h += `<div class="intro"><h2>JLPT ${lv} 單字表</h2><p>收錄 ${lv} 級別常考單字共 ${cnt} 個，涵蓋名詞、動詞、形容詞、副詞等詞性。</p><div class="tg"><span>JLPT ${lv}</span><span>${cnt} 單字</span><span>點擊 ★ 收藏</span></div></div>`;
+    // Daily progress bar
+    h += `<div class="daily-bar">
+      <div class="dp"><div class="dp-lbl">總進度 ${lv}</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(prog.totalOffset/cnt*100)}%"></div></div>
+      <div class="dp-txt">${prog.totalOffset} / ${cnt} 已排入學習</div></div>
+      <button class="daily-btn ${dailyMode?'on':''}" onclick="toggleDailyMode()">${dailyMode?'顯示全部':'每日模式'}</button>
+      ${dailyMode&&prog.totalOffset<cnt?'<button class="daily-btn" onclick="nextDailyBatch()">下一批 →</button>':''}
+    </div>`;
+    if (!dailyMode) {
+      h += `<div class="intro"><h2>JLPT ${lv} 單字表</h2><p>收錄 ${lv} 級別常考單字共 ${cnt} 個，涵蓋名詞、動詞、形容詞、副詞等詞性。</p><div class="tg"><span>JLPT ${lv}</span><span>${cnt} 單字</span><span>🔊 點擊喇叭聽發音</span></div></div>`;
+    } else {
+      const start = prog.totalOffset;
+      const end = Math.min(start + DAILY_NEW, cnt);
+      h += `<div class="intro"><h2>今日學習 — ${lv}</h2><p>第 ${start+1}～${end} 個單字（共 ${end-start} 個）。背完後點「下一批」進入下一組。</p><div class="tg"><span>每日 ${DAILY_NEW} 個</span><span>🔊 點擊喇叭聽發音</span></div></div>`;
+    }
   }
+
+  const spkSvg = '<svg class="spk" onclick="event.stopPropagation();speak(this.closest(\'.vi\').querySelector(\'.vw\').textContent)" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/></svg>';
 
   let vc = 0;
   VOCAB_CATS.forEach(cat => {
@@ -693,8 +780,7 @@ function renderVocab() {
     h += '<div class="vg">';
     items.forEach(d => {
       const isFav = favList.includes(d.w);
-      const eid = 'v-'+currentLevel+'-'+(d.w+d.r).replace(/[^a-zA-Z0-9\u3000-\u9fff\u3040-\u309f\u30a0-\u30ff]/g,'');
-      h += `<div class="vi" data-fid="${d.w}"><div class="vl"><div class="vw">${d.w}</div>${d.w!==d.r?`<div class="vr">${d.r}</div>`:''}<div class="vm">${d.m}</div></div><span class="vp">${cat.name}</span><svg class="star ${isFav?'on':''}" onclick="toggleFav('${d.w.replace(/'/g,"\\'")}')" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>`;
+      h += `<div class="vi" data-fid="${d.w}"><div class="vl"><div class="vw">${d.w}</div>${d.w!==d.r?`<div class="vr">${d.r}</div>`:''}<div class="vm">${d.m}</div></div>${spkSvg}<span class="vp">${cat.name}</span><svg class="star ${isFav?'on':''}" onclick="toggleFav('${d.w.replace(/'/g,"\\'")}')" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>`;
     });
     h += '</div></section>';
   });
@@ -860,5 +946,6 @@ setTimeout(()=>{ if(typeof SRS!=='undefined') SRS.updateReviewCount(); }, 100);
 <script src="quiz.js"></script>
 <script src="srs.js"></script>
 <script src="stats.js"></script>
+<script src="grammar-drill.js"></script>
 </body>
 </html>
