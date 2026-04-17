@@ -1039,6 +1039,28 @@ function loadCloudData() {
         localStorage.setItem(k, JSON.stringify(merged));
       }
     });
+    // Backfill study_log from quiz_history for dates missing from calendar
+    const qh = JSON.parse(localStorage.getItem('quiz_history') || '[]');
+    if (qh.length) {
+      const sl = JSON.parse(localStorage.getItem('study_log') || '{}');
+      let patched = false;
+      const dayCounts = {};
+      qh.forEach(q => {
+        if (!q.date) return;
+        const day = q.date.split('T')[0];
+        dayCounts[day] = (dayCounts[day] || 0) + 1;
+      });
+      Object.entries(dayCounts).forEach(([day, cnt]) => {
+        if (!sl[day]) {
+          sl[day] = { vocab: 0, grammar: 0, quiz: cnt };
+          patched = true;
+        }
+      });
+      if (patched) {
+        localStorage.setItem('study_log', JSON.stringify(sl));
+        if (typeof saveAllCloud === 'function') saveAllCloud();
+      }
+    }
     if (typeof SRS !== 'undefined') SRS.updateReviewCount();
     if (typeof Calendar !== 'undefined') Calendar.renderPanel();
     doRender();
@@ -1165,7 +1187,9 @@ if (window.speechSynthesis) speechSynthesis.getVoices();
 
 // ========== DAILY MODE ==========
 let dailyMode = false;
+let grammarDailyMode = false;
 const DAILY_NEW = 20;
+const GRAMMAR_DAILY_NEW = 10;
 const DAILY_KEY = 'daily_progress';
 
 function getDailyProgress(lv) {
@@ -1195,6 +1219,39 @@ function nextDailyBatch() {
   prog.totalOffset = Math.min(prog.totalOffset + DAILY_NEW, data.length);
   prog.date = new Date().toISOString().split('T')[0];
   saveDailyProgress(lv, prog);
+  doRender();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ========== GRAMMAR DAILY MODE ==========
+function getGrammarDailyProgress(lv) {
+  try {
+    const d = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}');
+    const k = 'g_' + lv;
+    const today = new Date().toISOString().split('T')[0];
+    if (!d[k] || d[k].date !== today) return { date: today, learned: 0, totalOffset: d[k] ? d[k].totalOffset || 0 : 0 };
+    return d[k];
+  } catch(e) { return { date: new Date().toISOString().split('T')[0], learned: 0, totalOffset: 0 }; }
+}
+function saveGrammarDailyProgress(lv, prog) {
+  try {
+    const d = JSON.parse(localStorage.getItem(DAILY_KEY) || '{}');
+    d['g_' + lv] = prog;
+    localStorage.setItem(DAILY_KEY, JSON.stringify(d));
+    if (typeof saveAllCloud === 'function') saveAllCloud();
+  } catch(e) {}
+}
+function toggleGrammarDailyMode() {
+  grammarDailyMode = !grammarDailyMode;
+  doRender();
+}
+function nextGrammarBatch() {
+  const lv = currentLevel;
+  const gd = getGrammarData(lv);
+  const prog = getGrammarDailyProgress(lv);
+  prog.totalOffset = Math.min(prog.totalOffset + GRAMMAR_DAILY_NEW, gd.data.length);
+  prog.date = new Date().toISOString().split('T')[0];
+  saveGrammarDailyProgress(lv, prog);
   doRender();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1566,6 +1623,14 @@ function render() {
   if (lf) filtered = filtered.filter(d => d.t.includes(lf)||d.ex.includes(lf)||(d.p&&d.p.includes(lf))||d.eg.some(e=>e.j.includes(lf)||e.z.includes(lf)));
   if (showFavOnly) filtered = filtered.filter(d => favList.includes(d.id));
 
+  // Grammar daily mode: limit to batch
+  const gProg = getGrammarDailyProgress(currentLevel);
+  if (grammarDailyMode && !lf && !showFavOnly) {
+    const start = gProg.totalOffset;
+    const end = Math.min(start + GRAMMAR_DAILY_NEW, data.length);
+    filtered = data.slice(start, end);
+  }
+
   const groups = {};
   cats.forEach(c => groups[c.name] = []);
   filtered.forEach(d => { if(groups[d.cat]) groups[d.cat].push(d); });
@@ -1574,7 +1639,19 @@ function render() {
   if (!lf && !showFavOnly) {
     const lv = currentLevel.toUpperCase();
     const cnt = data.length;
-    h += `<div class="intro"><h2>JLPT ${lv} 文法筆記</h2><p>收錄 ${lv} 級別完整文法共 ${cnt} 個文法點，含接續規則、例句及中文解說。</p><div class="tg"><span>JLPT ${lv}</span><span>${cnt} 文法點</span><span>再留計劃</span></div></div>`;
+    h += `<div class="daily-bar">
+      <div class="dp"><div class="dp-lbl">總進度 ${lv} 文法</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(gProg.totalOffset/cnt*100)}%"></div></div>
+      <div class="dp-txt">${gProg.totalOffset} / ${cnt} 已排入學習</div></div>
+      <button class="daily-btn ${grammarDailyMode?'on':''}" onclick="toggleGrammarDailyMode()">${grammarDailyMode?'顯示全部':'每日模式'}</button>
+      ${grammarDailyMode&&gProg.totalOffset<cnt?'<button class="daily-btn" onclick="nextGrammarBatch()">下一批 →</button>':''}
+    </div>`;
+    if (!grammarDailyMode) {
+      h += `<div class="intro"><h2>JLPT ${lv} 文法筆記</h2><p>收錄 ${lv} 級別完整文法共 ${cnt} 個文法點，含接續規則、例句及中文解說。</p><div class="tg"><span>JLPT ${lv}</span><span>${cnt} 文法點</span><span>再留計劃</span></div></div>`;
+    } else {
+      const start = gProg.totalOffset;
+      const end = Math.min(start + GRAMMAR_DAILY_NEW, cnt);
+      h += `<div class="intro"><h2>今日學習 — ${lv} 文法</h2><p>第 ${start+1}～${end} 個文法點（共 ${end-start} 個）。看完後點「下一批」進入下一組。</p><div class="tg"><span>每日 ${GRAMMAR_DAILY_NEW} 個</span><span>再留計劃</span></div></div>`;
+    }
   }
 
   let vc = 0;
