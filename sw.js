@@ -1,8 +1,10 @@
-const CACHE_NAME = 'stayjp-v12';
+const CACHE_NAME = 'stayjp-v13';
 const ASSETS = [
   './',
   './index.html',
+  './home.html',
   './verbs.html',
+  './contact.html',
   './vocab-n5.js',
   './vocab-n4.js',
   './vocab-n3.js',

@@ -1041,6 +1041,7 @@ function loadCloudData() {
     });
     if (typeof SRS !== 'undefined') SRS.updateReviewCount();
     if (typeof Calendar !== 'undefined') Calendar.renderPanel();
+    doRender();
   }).catch(() => {});
 }
 function mergeHistory(local, cloud) {
