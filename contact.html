@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>意見回饋 — 再留計劃</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="再留計劃">
+<meta name="theme-color" content="#2C2C2C">
+<meta name="description" content="再留計劃意見回饋。回報問題、功能建議、或任何想說的話。">
+<style>
+/* == Theme Variables == */
+:root {
+  --bg: #FAF9F6;
+  --bg2: #FFFFFF;
+  --bg3: #F3F1ED;
+  --tx: #2C2C2C;
+  --tx2: #7A7A7A;
+  --tx3: #ACACAC;
+  --ac: #D4654A;
+  --ac2: #4A7FD4;
+  --bd: #E8E5E0;
+  --sh: 0 1px 3px rgba(0,0,0,.03);
+  --r: 14px;
+  --hh: 48px;
+  --ease: cubic-bezier(.25,.1,.25,1);
+}
+[data-theme="dark"] {
+  --bg: #1C1C1E;
+  --bg2: #2C2C2E;
+  --bg3: #242426;
+  --tx: #E5E5E5;
+  --tx2: #8E8E93;
+  --tx3: #636366;
+  --ac: #E8734A;
+  --ac2: #6BA8F5;
+  --bd: #3A3A3C;
+  --sh: none;
+}
+*{margin:0;padding:0;box-sizing:border-box;
+  transition: color .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease);
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "PingFang TC", system-ui, sans-serif;
+  background: var(--bg); color: var(--tx);
+  line-height: 1.7; font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--ac2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* == Header == */
+.hd {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: var(--bg); z-index: 100;
+  border-bottom: 1px solid var(--bd);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+}
+.hd-inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex; align-items: center;
+  padding: 0 20px; height: var(--hh); gap: 12px;
+}
+.hd h1 {
+  color: var(--tx); font-size: 17px; font-weight: 800;
+  white-space: nowrap; letter-spacing: -.3px;
+}
+.hd-links { display: flex; gap: 6px; margin-left: auto; align-items: center; }
+.hd-links a {
+  color: var(--tx2); text-decoration: none; font-size: 13px;
+  padding: 5px 12px; border-radius: 20px; font-weight: 500;
+  transition: all .2s var(--ease); white-space: nowrap;
+  background: var(--bg3);
+}
+.hd-links a:hover { color: var(--ac); background: var(--bg2); text-decoration: none; }
+.theme-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--tx3); padding: 6px;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  transition: color .2s var(--ease), background .2s var(--ease);
+  flex-shrink: 0;
+}
+.theme-btn:hover { color: var(--tx); background: var(--bg3); }
+.theme-btn svg { width: 18px; height: 18px; }
+
+/* == Main == */
+.main {
+  max-width: 640px; margin: 0 auto;
+  padding: calc(var(--hh) + 48px) 20px 80px;
+}
+.main h2 {
+  font-size: 26px; font-weight: 800; letter-spacing: -.3px;
+  margin-bottom: 8px;
+}
+.main .subtitle {
+  color: var(--tx2); font-size: 15px; margin-bottom: 36px;
+}
+
+/* == Cards == */
+.card {
+  background: var(--bg2); border: 1px solid var(--bd);
+  border-radius: var(--r); padding: 24px;
+  margin-bottom: 16px;
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.card:hover { border-color: var(--ac2); box-shadow: var(--sh); }
+[data-theme="dark"] .card:hover { box-shadow: none; }
+.card-title {
+  font-size: 17px; font-weight: 700; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title svg { width: 20px; height: 20px; stroke: var(--ac2); fill: none; stroke-width: 1.5; flex-shrink: 0; }
+.card-desc {
+  font-size: 14px; color: var(--tx2); line-height: 1.7; margin-bottom: 14px;
+}
+.card-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 14px; font-weight: 600; color: var(--ac2);
+}
+.card-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* == Form == */
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block; font-size: 14px; font-weight: 600;
+  margin-bottom: 6px; color: var(--tx);
+}
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%; padding: 10px 14px;
+  background: var(--bg); border: 1px solid var(--bd);
+  border-radius: 10px; font-size: 15px; color: var(--tx);
+  font-family: inherit; line-height: 1.6;
+  transition: border-color .2s var(--ease);
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+  outline: none; border-color: var(--ac2);
+}
+.form-group textarea { resize: vertical; min-height: 120px; }
+.form-group select { cursor: pointer; -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%237A7A7A' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px;
+}
+.submit-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--ac); color: #fff;
+  padding: 12px 28px; border-radius: 24px; border: none;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: inherit;
+  transition: transform .2s var(--ease), opacity .2s var(--ease);
+}
+.submit-btn:hover { transform: translateY(-1px); opacity: .9; }
+.submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.form-note { font-size: 12px; color: var(--tx3); margin-top: 8px; }
+.success-msg {
+  display: none; padding: 16px; background: #dcfce7; color: #166534;
+  border-radius: 10px; font-size: 14px; font-weight: 500; margin-top: 16px;
+}
+[data-theme="dark"] .success-msg { background: #14532d33; color: #86efac; }
+
+/* == Footer == */
+.ft {
+  padding: 40px 20px; text-align: center; color: var(--tx3);
+  font-size: 12px; border-top: 1px solid var(--bd);
+  background: var(--bg); line-height: 1.9;
+}
+.ft a { color: var(--ac2); }
+.ft-links { display: flex; gap: 16px; justify-content: center; margin-top: 12px; }
+
+@media(max-width:768px) {
+  .main { padding: calc(var(--hh) + 32px) 16px 56px; }
+  .main h2 { font-size: 22px; }
+}
+@media(max-width:480px) {
+  .hd h1 { font-size: 15px; }
+  .hd-links a { font-size: 12px; padding: 4px 10px; }
+}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <div class="hd-inner">
+    <h1>日本再留計劃</h1>
+    <div class="hd-links">
+      <a href="index.html">學習工具</a>
+      <a href="home.html">首頁</a>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" aria-label="切換深色模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+  <h2>意見回饋</h2>
+  <p class="subtitle">遇到 bug、想要什麼功能、或任何想說的都歡迎。</p>
+
+  <!-- GitHub Issues -->
+  <div class="card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      回報問題 / 功能建議
+    </div>
+    <div class="card-desc">如果你有 GitHub 帳號，直接開 Issue 是最快的方式。可以附截圖、描述重現步驟。</div>
+    <a href="https://github.com/miafrontend2026/stayjp.study/issues/new" target="_blank" class="card-link">
+      在 GitHub 開 Issue <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+    </a>
+  </div>
+
+  <!-- Direct Form -->
+  <div class="card" id="formCard">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      直接留言
+    </div>
+    <div class="card-desc">沒有 GitHub 帳號也沒關係，直接在這裡留言。</div>
+    <form id="contactForm" onsubmit="return submitForm(event)">
+      <div class="form-group">
+        <label for="ftype">類型</label>
+        <select id="ftype" name="type" required>
+          <option value="">請選擇</option>
+          <option value="bug">Bug 回報</option>
+          <option value="feature">功能建議</option>
+          <option value="content">內容錯誤（單字/文法）</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="fmsg">內容</label>
+        <textarea id="fmsg" name="message" placeholder="描述你遇到的問題或想要的功能…" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="femail">Email（選填）</label>
+        <input type="email" id="femail" name="email" placeholder="方便回覆你的話留一下">
+      </div>
+      <button type="submit" class="submit-btn" id="submitBtn">送出</button>
+      <div class="form-note">留言會以 GitHub Issue 形式送出。</div>
+    </form>
+    <div class="success-msg" id="successMsg">感謝你的回饋！已成功送出。</div>
+  </div>
+
+  <!-- Email -->
+  <div class="card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+      Email 聯絡
+    </div>
+    <div class="card-desc">也可以直接寄信給我。</div>
+    <a href="mailto:hayashilog.study@gmail.com" class="card-link">
+      hayashilog.study@gmail.com <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+    </a>
+  </div>
+</main>
+
+<footer class="ft">
+  <div>&copy; 2026 再留計劃</div>
+  <div class="ft-links">
+    <a href="index.html">學習工具</a>
+    <a href="home.html">首頁</a>
+    <a href="https://github.com/miafrontend2026/stayjp.study" target="_blank">GitHub</a>
+  </div>
+</footer>
+
+<script>
+// ========== THEME ==========
+function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  updateThemeIcon();
+}
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = isDark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  updateThemeIcon();
+}
+function updateThemeIcon() {
+  const btn = document.getElementById('themeBtn');
+  if (!btn) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  btn.innerHTML = isDark
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>';
+}
+initTheme();
+
+// ========== FORM → GitHub Issue ==========
+async function submitForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '送出中…';
+
+  const type = document.getElementById('ftype').value;
+  const msg = document.getElementById('fmsg').value;
+  const email = document.getElementById('femail').value;
+
+  const labels = { bug: 'bug', feature: 'enhancement', content: 'content-error', other: '' };
+  const typeNames = { bug: 'Bug 回報', feature: '功能建議', content: '內容錯誤', other: '其他' };
+  const title = `[${typeNames[type]}] ${msg.slice(0, 60)}${msg.length > 60 ? '…' : ''}`;
+  const body = `**類型：** ${typeNames[type]}\n\n${msg}${email ? '\n\n**回覆 Email：** ' + email : ''}\n\n---\n_透過意見回饋頁面送出_`;
+
+  // Open GitHub new issue page with pre-filled content (no API token needed)
+  const params = new URLSearchParams({ title, body });
+  if (labels[type]) params.set('labels', labels[type]);
+  window.open('https://github.com/miafrontend2026/stayjp.study/issues/new?' + params.toString(), '_blank');
+
+  // Show success
+  document.getElementById('contactForm').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
+</script>
+</body>
+</html>
