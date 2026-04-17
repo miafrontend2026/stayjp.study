@@ -33,8 +33,11 @@ const Stats = (() => {
   }
 
   function switchTab(tab) {
-    document.querySelectorAll('.stat-tab').forEach(b => b.classList.remove('on'));
-    event.target.classList.add('on');
+    document.querySelectorAll('.stat-tab').forEach(b => {
+      b.classList.toggle('on', b.textContent.includes(
+        tab === 'overview' ? '總覽' : tab === 'history' ? '考試' : tab === 'notebook' ? '生詞' : '弱點'
+      ));
+    });
     const c = document.getElementById('statContent');
     if (tab === 'overview') c.innerHTML = buildOverview();
     else if (tab === 'history') c.innerHTML = buildHistory();
