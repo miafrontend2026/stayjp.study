@@ -1,22 +1,12 @@
 {
   "name": "stay-jp-notes",
   "version": "1.0.0",
-  "main": "calendar.js",
+  "private": true,
+  "description": "StayJP Study — JLPT N5–N1 備考工具",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "validate": "node scripts/validate.js",
+    "check-readings": "node scripts/check-readings.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/miafrontend2026/stayjp.study.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/miafrontend2026/stayjp.study/issues"
-  },
-  "homepage": "https://github.com/miafrontend2026/stayjp.study#readme",
-  "description": "",
   "dependencies": {
     "kuromoji": "^0.1.2"
   }

@@ -18,26 +18,22 @@ service cloud.firestore {
     }
 
     // 意見回饋 — 從 contact.html 的表單寫入
-    // 任何人（包含未登入）可新增，但：
-    //   - 只能 create，不能讀取/更新/刪除（只有你從 Console 讀）
-    //   - 欄位限制防止亂塞資料
-    //   - 大小限制防 DoS
+    // 必須登入才能 create（防 bot 濫寫），只有你從 Console 讀
     match /feedback/{docId} {
       allow read, update, delete: if false;
       allow create: if
+        // 必須登入
+        request.auth != null &&
+        // uid 必須與 auth.uid 一致（防偽造他人身分）
+        request.resource.data.uid == request.auth.uid &&
         // 必要欄位齊全
-        request.resource.data.keys().hasAll(['type', 'message', 'createdAt']) &&
+        request.resource.data.keys().hasAll(['type', 'message', 'uid', 'createdAt']) &&
         // type 必須是預期值
         request.resource.data.type in ['bug', 'feature', 'content', 'other'] &&
         // 訊息非空且 ≤ 5000 字元
         request.resource.data.message is string &&
         request.resource.data.message.size() > 0 &&
-        request.resource.data.message.size() <= 5000 &&
-        // email 若存在必須是 string 或 null
-        (!('email' in request.resource.data) ||
-         request.resource.data.email == null ||
-         (request.resource.data.email is string &&
-          request.resource.data.email.size() <= 200));
+        request.resource.data.message.size() <= 5000;
     }
 
     // 預設拒絕：未明確允許的所有路徑皆擋

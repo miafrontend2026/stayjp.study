@@ -962,7 +962,7 @@ body {
   <div data-i18n="copyright">&copy; 2026 再留計劃 — All rights reserved.</div>
   <div style="margin-top:4px" data-i18n="disclaimer">本站內容為原創整理，不隸屬於 JLPT 官方或任何教育機構。</div>
   <div style="margin-top:4px"><span id="ftInfo"></span></div>
-  <div style="margin-top:6px;opacity:.5"><a href="contact.html" data-i18n="feedback">意見回饋</a> · <a href="https://github.com/miafrontend2026/stayjp.study" target="_blank">GitHub</a></div>
+  <div style="margin-top:6px;opacity:.5"><a href="contact.html" data-i18n="feedback">意見回饋</a></div>
 </footer>
 <button class="bt" id="bt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
@@ -1732,7 +1732,7 @@ function render() {
     items.forEach((d,i) => {
       const isFav = favList.includes(d.id);
       const idx = data.indexOf(d) + 1;
-      const reportUrl = `https://github.com/miafrontend2026/stayjp.study/issues/new?title=${encodeURIComponent('[文法錯誤] ' + d.id + ' ' + d.t)}&labels=content-error&body=${encodeURIComponent('文法 ID：' + d.id + '\n文法名：' + d.t + '\n\n錯誤描述：\n（請說明哪裡有錯，例如：接續格式、例句語感、中譯…）\n')}`;
+      const reportUrl = `mailto:stayjpplan@gmail.com?subject=${encodeURIComponent('[文法錯誤] ' + d.id + ' ' + d.t)}&body=${encodeURIComponent('文法 ID：' + d.id + '\n文法名：' + d.t + '\n\n錯誤描述：\n（請說明哪裡有錯，例如：接續格式、例句語感、中譯…）\n')}`;
       h += `<div class="gc" id="${d.id}"><div class="gh" onclick="toggleCard(this)"><span class="gn">${idx}</span><span class="gt">${d.t}</span><svg class="star ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav('${d.id}')" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div><div class="gb"><div class="gx"><div class="pt">${d.p}</div><div class="ep">${cvt(d.ex)}</div><div class="eg">${d.eg.map(e=>{
         const pureJ = e.j.replace(/<[^>]+>/g,'').replace(/'/g,"\\'");
         return `<div class="ex"><div class="j">${e.j}<svg class="ex-spk" onclick="event.stopPropagation();speak('${pureJ}')" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/></svg></div><div class="z">${cvt(e.z)}</div></div>`;

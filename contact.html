@@ -210,26 +210,21 @@ a:hover { text-decoration: underline; }
   <h2>意見回饋</h2>
   <p class="subtitle">遇到 bug、想要什麼功能、或任何想說的都歡迎。</p>
 
-  <!-- GitHub Issues -->
-  <div class="card">
-    <div class="card-title">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-      回報問題 / 功能建議
-    </div>
-    <div class="card-desc">如果你有 GitHub 帳號，直接開 Issue 是最快的方式。可以附截圖、描述重現步驟。</div>
-    <a href="https://github.com/miafrontend2026/stayjp.study/issues/new" target="_blank" class="card-link">
-      在 GitHub 開 Issue <svg viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
-    </a>
-  </div>
-
-  <!-- Direct Form -->
+  <!-- Direct Form (登入後才顯示) -->
   <div class="card" id="formCard">
     <div class="card-title">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
       直接留言
     </div>
-    <div class="card-desc">沒有 GitHub 帳號也沒關係，直接在這裡留言。</div>
-    <form id="contactForm" onsubmit="return submitForm(event)">
+    <div class="card-desc">說明你遇到的問題或建議，我會盡快看到。</div>
+    <!-- 未登入提示 -->
+    <div id="loginPrompt" style="display:none;padding:20px;background:var(--bg3);border-radius:10px;text-align:center">
+      <div style="color:var(--tx2);font-size:14px;margin-bottom:12px">請先以 Google 帳號登入才能留言</div>
+      <button class="submit-btn" onclick="signIn()">Google 登入</button>
+    </div>
+    <!-- 表單 -->
+    <form id="contactForm" onsubmit="return submitForm(event)" style="display:none">
+      <div id="userInfo" style="font-size:12px;color:var(--tx2);margin-bottom:12px">以 <span id="userEmail"></span> 身分留言 · <a href="#" onclick="signOut();return false" style="color:var(--ac)">登出</a></div>
       <div class="form-group">
         <label for="ftype">類型</label>
         <select id="ftype" name="type" required>
@@ -244,12 +239,7 @@ a:hover { text-decoration: underline; }
         <label for="fmsg">內容</label>
         <textarea id="fmsg" name="message" placeholder="描述你遇到的問題或想要的功能…" required></textarea>
       </div>
-      <div class="form-group">
-        <label for="femail">Email（選填）</label>
-        <input type="email" id="femail" name="email" placeholder="方便回覆你的話留一下">
-      </div>
       <button type="submit" class="submit-btn" id="submitBtn">送出</button>
-      <div class="form-note">留言會以 GitHub Issue 形式送出。</div>
     </form>
     <div class="success-msg" id="successMsg">感謝你的回饋！已成功送出。</div>
   </div>
@@ -272,12 +262,12 @@ a:hover { text-decoration: underline; }
   <div class="ft-links">
     <a href="index.html">學習工具</a>
     <a href="home.html">首頁</a>
-    <a href="https://github.com/miafrontend2026/stayjp.study" target="_blank">GitHub</a>
   </div>
 </footer>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script src="i18n.js"></script>
@@ -402,23 +392,50 @@ const fbConfig = {
 };
 firebase.initializeApp(fbConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
+let currentUser = null;
+
+auth.onAuthStateChanged(u => {
+  currentUser = u;
+  const formEl = document.getElementById('contactForm');
+  const promptEl = document.getElementById('loginPrompt');
+  if (u) {
+    promptEl.style.display = 'none';
+    formEl.style.display = '';
+    document.getElementById('userEmail').textContent = u.email || u.displayName || '已登入';
+  } else {
+    promptEl.style.display = '';
+    formEl.style.display = 'none';
+  }
+});
+
+function signIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => {
+    alert('登入失敗：' + (err.message || err));
+  });
+}
+
+function signOut() { auth.signOut(); }
 
 // ========== FORM → Firestore ==========
 async function submitForm(e) {
   e.preventDefault();
+  if (!currentUser) { alert('請先登入'); return; }
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
   btn.textContent = '送出中…';
 
   const type = document.getElementById('ftype').value;
   const msg = document.getElementById('fmsg').value;
-  const email = document.getElementById('femail').value;
 
   try {
     await db.collection('feedback').add({
       type,
       message: msg,
-      email: email || null,
+      uid: currentUser.uid,
+      email: currentUser.email || null,
+      displayName: currentUser.displayName || null,
       ua: navigator.userAgent.slice(0, 200),
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
