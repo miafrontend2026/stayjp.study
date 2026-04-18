@@ -6,8 +6,8 @@
 <title>再留計劃 — 免費 JLPT N5~N1 備考工具｜單字・文法・模考・複習</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2WP4D34LE3"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-2WP4D34LE3');</script>
-<link rel="icon" href="stayjpplan.png" type="image/png">
-<link rel="apple-touch-icon" href="stayjpplan.png">
+<link rel="icon" href="stayjpplan.png?v=3" type="image/png">
+<link rel="apple-touch-icon" href="stayjpplan.png?v=3">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="再留計劃">
@@ -15,7 +15,7 @@
 <meta property="og:title" content="再留計劃 — 免費 JLPT N5~N1 備考工具｜單字・文法・模考・複習">
 <meta property="og:description" content="免費 JLPT N5~N1 線上備考工具。7710+ 單字、433 文法點、模擬考、SRS 間隔複習、聽力讀解練習。不用下載，打開就能用。">
 <meta property="og:type" content="website">
-<meta property="og:image" content="stayjpplan.png">
+<meta property="og:image" content="stayjpplan.png?v=3">
 <meta name="theme-color" content="#2C2C2C">
 <style>
 /* ======================================================
@@ -1530,8 +1530,8 @@ function renderVocab() {
     const cnt = data.length;
     // Daily progress bar
     h += `<div class="daily-bar">
-      <div class="dp"><div class="dp-lbl">總進度 ${lv}</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(prog.totalOffset/cnt*100)}%"></div></div>
-      <div class="dp-txt">${prog.totalOffset} / ${cnt} 已排入學習</div></div>
+      <div class="dp"><div class="dp-lbl">${t('total_progress', { lv })}</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(prog.totalOffset/cnt*100)}%"></div></div>
+      <div class="dp-txt">${t('progress_txt', { n: prog.totalOffset, total: cnt })}</div></div>
       <button class="daily-btn ${dailyMode?'on':''}" onclick="toggleDailyMode()">${dailyMode?t('show_all'):t('daily_mode')}</button>
       ${dailyMode&&prog.totalOffset<cnt?`<button class="daily-btn" onclick="nextDailyBatch()">${t('next_batch')}</button>`:''}
     </div>`;
@@ -1575,7 +1575,7 @@ function renderVocab() {
       buffer: 15,
       renderItem: (entry) => {
         if (entry.type === 'header') {
-          return `<section class="cs"><h2><span class="ci2">${entry.cat.icon}</span>${entry.cat.name}<span style="font-size:12px;color:#999;font-weight:400;margin-left:auto">${entry.count} 個</span></h2></section>`;
+          return `<section class="cs"><h2><span class="ci2">${entry.cat.icon}</span>${entry.cat.name}<span style="font-size:12px;color:#999;font-weight:400;margin-left:auto">${t('cat_count_vocab', { n: entry.count })}</span></h2></section>`;
         }
         const d = entry.d;
         const isFav = favList.includes(d.w);
@@ -1594,7 +1594,7 @@ function renderVocab() {
       const items = groups[cat.key];
       if (!items||!items.length) return;
       vc += items.length;
-      h += `<section class="cs" id="vcat-${cat.key}"><h2><span class="ci2">${cat.icon}</span>${cat.name}<span style="font-size:12px;color:#999;font-weight:400;margin-left:auto">${items.length} 個</span></h2>`;
+      h += `<section class="cs" id="vcat-${cat.key}"><h2><span class="ci2">${cat.icon}</span>${cat.name}<span style="font-size:12px;color:#999;font-weight:400;margin-left:auto">${t('cat_count_vocab', { n: items.length })}</span></h2>`;
       h += '<div class="vg">';
       items.forEach(d => {
         const isFav = favList.includes(d.w);
@@ -1709,8 +1709,8 @@ function render() {
     const lv = currentLevel.toUpperCase();
     const cnt = data.length;
     h += `<div class="daily-bar">
-      <div class="dp"><div class="dp-lbl">總進度 ${lv} 文法</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(gProg.totalOffset/cnt*100)}%"></div></div>
-      <div class="dp-txt">${gProg.totalOffset} / ${cnt} 已排入學習</div></div>
+      <div class="dp"><div class="dp-lbl">${t('total_progress_grammar', { lv })}</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(gProg.totalOffset/cnt*100)}%"></div></div>
+      <div class="dp-txt">${t('progress_txt', { n: gProg.totalOffset, total: cnt })}</div></div>
       <button class="daily-btn ${grammarDailyMode?'on':''}" onclick="toggleGrammarDailyMode()">${grammarDailyMode?t('show_all'):t('daily_mode')}</button>
       ${grammarDailyMode&&gProg.totalOffset<cnt?`<button class="daily-btn" onclick="nextGrammarBatch()">${t('next_batch')}</button>`:''}
     </div>`;
@@ -1728,7 +1728,7 @@ function render() {
     const items = groups[cat.name];
     if (!items||!items.length) return;
     vc += items.length;
-    h += `<section class="cs" id="cat-${cat.name}"><h2><span class="ci2">${cat.icon}</span>${cat.name}<span style="font-size:12px;color:#999;font-weight:400;margin-left:auto">${items.length} 項</span></h2>`;
+    h += `<section class="cs" id="cat-${cat.name}"><h2><span class="ci2">${cat.icon}</span>${cat.name}<span style="font-size:12px;color:#999;font-weight:400;margin-left:auto">${t('cat_count_grammar', { n: items.length })}</span></h2>`;
     items.forEach((d,i) => {
       const isFav = favList.includes(d.id);
       const idx = data.indexOf(d) + 1;
