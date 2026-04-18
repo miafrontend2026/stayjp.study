@@ -1791,10 +1791,12 @@ if ('serviceWorker' in navigator) {
 }
 
 // ========== I18N ==========
-const LANG_CYCLE = ['zh-TW', 'zh-CN', 'en'];
-const LANG_LABEL = { 'zh-TW': '繁', 'zh-CN': '简', 'en': 'EN' };
+const LANG_CYCLE = ['zh-TW', 'zh-CN'];
+const LANG_LABEL = { 'zh-TW': '繁', 'zh-CN': '简' };
 
 function applyI18n() {
+  // 移除 EN 支援：若 localStorage 存的是 'en'，強制切回繁中
+  if (!LANG_CYCLE.includes(I18n.getLang())) I18n.setLang('zh-TW');
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.dataset.i18n);
   });
