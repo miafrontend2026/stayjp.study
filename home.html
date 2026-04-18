@@ -276,17 +276,50 @@ a:hover { text-decoration: underline; }
 }
 .ft a { color: var(--ac2); text-decoration: none; }
 .ft a:hover { text-decoration: underline; }
-.kofi-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: #FF5E5B; color: #fff;
-  padding: 10px 22px; border-radius: 24px;
-  text-decoration: none; font-size: 14px; font-weight: 600;
-  transition: transform .2s var(--ease), box-shadow .2s var(--ease);
-  box-shadow: 0 2px 8px rgba(255,94,91,.25);
-  margin-bottom: 16px;
+/* == Support Section == */
+.support-msg {
+  max-width: 560px; margin: 0 auto 28px;
+  font-size: 16px; color: var(--tx2); line-height: 1.9; text-align: center;
 }
-.kofi-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255,94,91,.35); text-decoration: none; }
-.kofi-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+.support-msg strong { color: var(--tx); font-weight: 700; }
+.support-qr {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px; max-width: 520px; margin: 0 auto;
+}
+.qr-card {
+  background: var(--bg2); border: 1px solid var(--bd);
+  border-radius: var(--r); padding: 20px 16px;
+  text-align: center;
+}
+.qr-card img, .qr-placeholder {
+  display: block; width: 180px; height: 180px;
+  margin: 0 auto 10px; border-radius: 10px;
+  background: var(--bg3);
+}
+.qr-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--tx3); font-size: 12px;
+  border: 2px dashed var(--bd);
+}
+.qr-label {
+  font-size: 15px; font-weight: 700; color: var(--tx);
+}
+.qr-hint {
+  font-size: 12px; color: var(--tx3); margin-top: 4px;
+}
+.support-overseas {
+  text-align: center; margin-top: 28px;
+  font-size: 13px; color: var(--tx3);
+}
+.support-overseas a {
+  color: var(--ac); text-decoration: none; font-weight: 600;
+}
+.support-overseas a:hover { text-decoration: underline; }
+@media(max-width:480px) {
+  .support-qr { grid-template-columns: 1fr; gap: 14px; }
+  .qr-card img, .qr-placeholder { width: 160px; height: 160px; }
+}
+
 .ft-links { display: flex; gap: 16px; justify-content: center; margin-top: 12px; }
 
 /* == Responsive == */
@@ -380,7 +413,7 @@ a:hover { text-decoration: underline; }
     <div class="story-text">
       <p>單字、文法、模擬考、SRS 間隔複習整合在同一站，免註冊、免付費、資料存放本地裝置。</p>
       <p>介面以 <strong>每日固定份量</strong> 為核心：每天 20 個單字、10 個文法點，搭配間隔複習與計時模考，避免一次塞太多而放棄。</p>
-      <p>若工具對你有幫助，歡迎分享或透過下方「請我喝杯咖啡」小額贊助支持持續維護。</p>
+      <p>若工具對你有幫助，歡迎分享給其他 JLPT 備考者。</p>
     </div>
   </div>
 </section>
@@ -409,14 +442,28 @@ a:hover { text-decoration: underline; }
   </div>
 </section>
 
+<!-- Support -->
+<section class="section" id="support">
+  <div class="section-inner">
+    <h2 class="section-title">支持 / 贊助</h2>
+    <p class="support-msg">謝謝支持我的大阪生活！若您在台灣，歡迎使用 <strong>街口</strong> 或 <strong>歐付寶</strong> 贊助。</p>
+    <div class="support-qr">
+      <div class="qr-card">
+        <div class="qr-placeholder">QR 碼待上傳</div>
+        <div class="qr-label">街口支付</div>
+        <div class="qr-hint">手機街口 App 掃碼</div>
+      </div>
+      <div class="qr-card">
+        <div class="qr-placeholder">QR 碼待上傳</div>
+        <div class="qr-label">歐付寶</div>
+        <div class="qr-hint">手機歐付寶 App 掃碼</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- Footer -->
 <footer class="ft">
-  <div style="margin-bottom:16px">
-    <a href="https://ko-fi.com/stayjpplan" target="_blank" rel="noopener" class="kofi-btn">
-      <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>
-      請我喝杯咖啡
-    </a>
-  </div>
   <div>&copy; 2026 再留計劃</div>
   <div style="margin-top:4px">本站為原創學習整理，建議搭配 JLPT 官方教材使用。若發現內容有誤，歡迎點卡片上「🚩 回報此項錯誤」告知。不隸屬於 JLPT 官方或任何教育機構。</div>
   <div class="ft-links">
