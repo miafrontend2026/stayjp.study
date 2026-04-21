@@ -49,8 +49,10 @@ const Quiz = (() => {
   }
 
   function generate(data, count) {
-    const shuffled = [...data].sort(() => Math.random() - 0.5);
-    const picked = shuffled.slice(0, Math.min(count, data.length));
+    // 選讀音題型：排除純假名詞（w === r），否則題目和正解同形沒意義
+    const source = quizType === 'reading' ? data.filter(d => d.w !== d.r) : data;
+    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    const picked = shuffled.slice(0, Math.min(count, shuffled.length));
     return picked.map(word => {
       const pool = data.filter(d => {
         if (quizType === 'word2meaning') return d.m !== word.m;
