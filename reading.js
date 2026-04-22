@@ -537,15 +537,28 @@ const Reading = (() => {
     document.getElementById('quizBg').classList.add('show');
   }
 
+  // 追蹤各級別最近讀過的 passage id，避免連續抽到同一篇
+  const recentIds = {}; // { n5: [...], n4: [...], ... }
   function begin() {
-    // 從起始面板讀設定；若從結果頁呼叫則面板不存在，沿用上次設定（防止按鈕無反應）
     const lvEl = document.querySelector('#rdLevel .on');
     const tmEl = document.querySelector('#rdTimer .on');
     if (lvEl) selectedLevel = lvEl.dataset.v;
     if (tmEl) timerEnabled = tmEl.dataset.v === '1';
     const pool = passages.filter(p => p.level === selectedLevel);
     if (!pool.length) { alert(t('rd_no_data')); return; }
-    currentPassage = pool[Math.floor(Math.random() * pool.length)];
+    if (!recentIds[selectedLevel]) recentIds[selectedLevel] = [];
+    const recent = recentIds[selectedLevel];
+    // 排除最近讀過的；若全部讀過則重置（輪完一遍重新開始）
+    let candidates = pool.filter(p => !recent.includes(p.id));
+    if (!candidates.length) {
+      recent.length = 0;
+      candidates = pool;
+    }
+    currentPassage = candidates[Math.floor(Math.random() * candidates.length)];
+    recent.push(currentPassage.id);
+    // 保留最多 pool 一半的長度，讓遠古的可以重出
+    const keep = Math.max(1, Math.floor(pool.length / 2));
+    while (recent.length > keep) recent.shift();
     currentQ = 0;
     score = 0;
     answered = [];
