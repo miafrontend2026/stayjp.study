@@ -1125,22 +1125,42 @@ if (fbConfig) {
   auth = firebase.auth();
   db = firebase.firestore();
   auth.onAuthStateChanged(u => { currentUser = u; updateAuthUI(); loadFavorites(); loadCloudData(); });
-  // 處理手機 redirect 回來的結果
+  // 若從 redirect 回來，拿結果（桌機不會進這裡，有 popup 就沒 redirect）
   auth.getRedirectResult().catch(e => {
-    if (e && e.code && e.code !== 'auth/null-user') alert('登入失敗: ' + e.message);
+    if (e && e.message) console.warn('getRedirectResult:', e.message);
   });
 }
 
 // ========== AUTH ==========
-// 手機/平板用 redirect（popup 在 iOS Safari 會被 ITP 擋），桌機用 popup
-function isMobile() {
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (('ontouchstart' in window) && window.matchMedia('(max-width:820px)').matches);
+// 偵測 LINE/FB/IG 內嵌瀏覽器（Google OAuth 會回 disallowed_useragent）
+function isInAppBrowser() {
+  const ua = navigator.userAgent || '';
+  return /FBAN|FBAV|Instagram|Line\/|MicroMessenger|Twitter|TikTok|KAKAOTALK/i.test(ua);
 }
+function showInAppBanner() {
+  if (document.getElementById('inAppBanner')) return;
+  const b = document.createElement('div');
+  b.id = 'inAppBanner';
+  b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:500;background:var(--note-bg,#FFF8F0);border-bottom:1px solid var(--bd);color:var(--note-tx,#92400E);font-size:13px;padding:10px 14px;line-height:1.6;text-align:center';
+  b.innerHTML = '此頁在 LINE/FB 內嵌瀏覽器無法登入 Google — 請點右上角 <strong>「⋯」→「在瀏覽器開啟」</strong>再試。<button onclick="this.parentNode.remove()" style="margin-left:10px;background:transparent;border:1px solid currentColor;border-radius:6px;padding:2px 8px;color:inherit;cursor:pointer">知道了</button>';
+  document.body.appendChild(b);
+}
+
 function handleAuth() {
   if (currentUser) { auth.signOut(); currentUser = null; updateAuthUI(); return; }
+  if (isInAppBrowser()) { showInAppBanner(); return; }
   const provider = new firebase.auth.GoogleAuthProvider();
-  const method = isMobile() ? 'signInWithRedirect' : 'signInWithPopup';
-  auth[method](provider).catch(e => alert('登入失敗: ' + e.message));
+  // Popup 優先（桌機最佳、手機 Safari 也多半能通）；被擋才 fallback redirect
+  auth.signInWithPopup(provider).catch(e => {
+    const code = (e && e.code) || '';
+    if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user' ||
+        code === 'auth/cancelled-popup-request' || code === 'auth/web-storage-unsupported' ||
+        code === 'auth/operation-not-supported-in-this-environment') {
+      auth.signInWithRedirect(provider).catch(err => alert('登入失敗: ' + err.message));
+    } else {
+      alert('登入失敗: ' + (e.message || code));
+    }
+  });
 }
 function updateAuthUI() {
   const area = document.getElementById('authArea');
