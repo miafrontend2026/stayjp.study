@@ -1125,12 +1125,22 @@ if (fbConfig) {
   auth = firebase.auth();
   db = firebase.firestore();
   auth.onAuthStateChanged(u => { currentUser = u; updateAuthUI(); loadFavorites(); loadCloudData(); });
+  // 處理手機 redirect 回來的結果
+  auth.getRedirectResult().catch(e => {
+    if (e && e.code && e.code !== 'auth/null-user') alert('登入失敗: ' + e.message);
+  });
 }
 
 // ========== AUTH ==========
+// 手機/平板用 redirect（popup 在 iOS Safari 會被 ITP 擋），桌機用 popup
+function isMobile() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (('ontouchstart' in window) && window.matchMedia('(max-width:820px)').matches);
+}
 function handleAuth() {
   if (currentUser) { auth.signOut(); currentUser = null; updateAuthUI(); return; }
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert('登入失敗: ' + e.message));
+  const provider = new firebase.auth.GoogleAuthProvider();
+  const method = isMobile() ? 'signInWithRedirect' : 'signInWithPopup';
+  auth[method](provider).catch(e => alert('登入失敗: ' + e.message));
 }
 function updateAuthUI() {
   const area = document.getElementById('authArea');
