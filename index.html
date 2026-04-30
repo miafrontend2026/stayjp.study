@@ -108,6 +108,7 @@ body {
   letter-spacing: 0.01em;
   padding-bottom: var(--btm);
   -webkit-font-smoothing: antialiased;
+  touch-action: manipulation; /* 禁用 iOS Safari 雙擊放大，保留 pinch zoom */
 }
 
 /* == Top bar (Header) == */
@@ -635,7 +636,7 @@ select::-ms-expand { display: none; }
   margin-bottom: 16px; display: flex;
   align-items: center; gap: 12px; flex-wrap: wrap;
 }
-.daily-bar .dp { flex: 1; min-width: 120px; }
+.daily-bar .dp { flex: 1 1 100%; min-width: 0; }
 .daily-bar .dp-lbl { font-size: 12px; color: var(--tx2); margin-bottom: 4px; }
 .daily-bar .dp-bar { height: 6px; background: var(--prog-empty); border-radius: 3px; overflow: hidden; }
 .daily-bar .dp-fill { height: 100%; background: var(--ac2); border-radius: 3px; transition: width .3s var(--ease); }
@@ -649,6 +650,7 @@ select::-ms-expand { display: none; }
 }
 .daily-btn:hover { background: var(--ac2); color: #fff; }
 .daily-btn.on { background: var(--ac2); color: #fff; }
+.daily-batch-row { display: flex; gap: 8px; flex-wrap: nowrap; flex-shrink: 0; }
 
 /* == Responsive: Mobile (max-width: 768px) == */
 @media (max-width: 768px) {
@@ -744,6 +746,38 @@ select::-ms-expand { display: none; }
   color: var(--tx2); transition: background .2s var(--ease);
 }
 .qclose:hover { background: var(--bg3); }
+
+/* == Custom confirm == */
+.cc-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; opacity: 0; pointer-events: none;
+  transition: opacity .18s var(--ease);
+  backdrop-filter: blur(2px);
+}
+.cc-mask.on { opacity: 1; pointer-events: auto; }
+.cc-box {
+  background: var(--bg2); border: 1px solid var(--bd);
+  border-radius: 14px; padding: 22px 22px 18px;
+  width: min(340px, calc(100vw - 32px));
+  box-shadow: 0 12px 40px rgba(0,0,0,.25);
+  transform: scale(.94); transition: transform .18s var(--ease);
+}
+.cc-mask.on .cc-box { transform: scale(1); }
+.cc-title { font-size: 16px; font-weight: 700; color: var(--tx); margin-bottom: 8px; }
+.cc-msg { font-size: 14px; color: var(--tx2); line-height: 1.6; margin-bottom: 18px; white-space: pre-line; }
+.cc-btns { display: flex; gap: 8px; }
+.cc-btn {
+  flex: 1; padding: 10px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--bd); background: none; color: var(--tx2);
+  transition: all .15s var(--ease);
+}
+.cc-btn:hover { background: var(--bg3); }
+.cc-btn.primary { background: var(--ac2); color: #fff; border-color: var(--ac2); }
+.cc-btn.primary:hover { opacity: .9; background: var(--ac2); }
+.cc-btn.danger { background: #EF4444; color: #fff; border-color: #EF4444; }
+.cc-btn.danger:hover { opacity: .9; background: #EF4444; }
 .qhd { display: flex; justify-content: space-between; font-size: 13px; color: var(--tx2); margin-bottom: 16px; }
 .qprompt { text-align: center; padding: 24px 0; }
 .qmain { font-size: 36px; font-weight: 700; color: var(--tx); }
@@ -860,6 +894,12 @@ select::-ms-expand { display: none; }
 }
 .fc-reading { font-size: 18px; color: var(--ac2); margin-bottom: 12px; }
 .fc-meaning { font-size: 22px; color: var(--ac); font-weight: 600; margin: 12px 0 18px; }
+.fc-ex { margin: 4px 0 14px; padding: 10px 12px; background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; text-align: left; max-width: 360px; }
+.fc-ex-row + .fc-ex-row { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--bd); }
+.fc-ex-j { font-size: 15px; color: var(--tx); margin-bottom: 2px; }
+.fc-ex-z { font-size: 13px; color: var(--tx2); }
+.fc-ex-spk { vertical-align: middle; margin-left: 4px; cursor: pointer; opacity: .6; color: var(--ac2); }
+.fc-ex-spk:hover { opacity: 1; }
 .fc-hint { font-size: 11px; color: var(--tx3); margin-top: 10px; }
 .fc-btns { display: flex; gap: 8px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
 .fc-btn {
@@ -1381,10 +1421,14 @@ function doRender() {
 }
 
 // ========== TTS ==========
+function hiraToKata(s) {
+  // 部分 TTS 引擎會把單字開頭的「は」當主題助詞讀 wa；轉成片假名強制走音節讀法
+  return String(s||'').replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+}
 function speak(text) {
   if (!window.speechSynthesis) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(hiraToKata(text));
   u.lang = 'ja-JP';
   u.rate = 0.85;
   // Try to find Japanese voice
@@ -1481,6 +1525,50 @@ function prevGrammarBatch() {
   prog.totalOffset = Math.max(prog.totalOffset - GRAMMAR_DAILY_NEW, 0);
   prog.date = new Date().toISOString().split('T')[0];
   saveGrammarDailyProgress(lv, prog);
+  doRender();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showConfirm(opts) {
+  return new Promise(resolve => {
+    const { title = '', message = '', okText = '確定', cancelText = '取消', danger = false } = opts || {};
+    const mask = document.createElement('div');
+    mask.className = 'cc-mask';
+    mask.innerHTML = `<div class="cc-box" role="dialog" aria-modal="true">
+      ${title?`<div class="cc-title">${title}</div>`:''}
+      <div class="cc-msg">${message}</div>
+      <div class="cc-btns">
+        <button class="cc-btn" data-act="cancel">${cancelText}</button>
+        <button class="cc-btn ${danger?'danger':'primary'}" data-act="ok">${okText}</button>
+      </div>
+    </div>`;
+    document.body.appendChild(mask);
+    requestAnimationFrame(() => mask.classList.add('on'));
+    const close = (val) => {
+      mask.classList.remove('on');
+      setTimeout(() => mask.remove(), 200);
+      document.removeEventListener('keydown', onKey);
+      resolve(val);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') close(false); else if (e.key === 'Enter') close(true); };
+    document.addEventListener('keydown', onKey);
+    mask.addEventListener('click', e => {
+      if (e.target === mask) close(false);
+      else if (e.target.dataset.act === 'ok') close(true);
+      else if (e.target.dataset.act === 'cancel') close(false);
+    });
+  });
+}
+async function resetDailyBatch() {
+  if (!await showConfirm({ title: t('reset_progress'), message: t('reset_confirm'), okText: t('reset_progress'), cancelText: t('cancel') || '取消', danger: true })) return;
+  const lv = currentLevel;
+  saveDailyProgress(lv, { date: new Date().toISOString().split('T')[0], learned: 0, offset: 0, totalOffset: 0 });
+  doRender();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function resetGrammarBatch() {
+  if (!await showConfirm({ title: t('reset_progress'), message: t('reset_confirm'), okText: t('reset_progress'), cancelText: t('cancel') || '取消', danger: true })) return;
+  const lv = currentLevel;
+  saveGrammarDailyProgress(lv, { date: new Date().toISOString().split('T')[0], learned: 0, totalOffset: 0 });
   doRender();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1698,8 +1786,11 @@ function renderVocab() {
       <div class="dp"><div class="dp-lbl">${t('total_progress', { lv })}</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(prog.totalOffset/cnt*100)}%"></div></div>
       <div class="dp-txt">${t('progress_txt', { n: prog.totalOffset, total: cnt })}</div></div>
       <button class="daily-btn ${dailyMode?'on':''}" onclick="toggleDailyMode()">${dailyMode?t('show_all'):t('daily_mode')}</button>
-      ${dailyMode&&prog.totalOffset>0?`<button class="daily-btn" onclick="prevDailyBatch()">${t('prev_batch')}</button>`:''}
-      ${dailyMode&&prog.totalOffset<cnt?`<button class="daily-btn" onclick="nextDailyBatch()">${t('next_batch')}</button>`:''}
+      ${dailyMode?`<div class="daily-batch-row">
+        ${prog.totalOffset>0?`<button class="daily-btn" onclick="prevDailyBatch()">${t('prev_batch')}</button>`:''}
+        ${prog.totalOffset<cnt?`<button class="daily-btn" onclick="nextDailyBatch()">${t('next_batch')}</button>`:''}
+        ${prog.totalOffset>0?`<button class="daily-btn" onclick="resetDailyBatch()" title="${t('reset_progress')}">↺</button>`:''}
+      </div>`:''}
     </div>`;
     if (!dailyMode) {
       h += `<div class="intro"><h2>${t('vocab_title', { lv })}</h2><p>${t('vocab_desc', { lv, n: cnt })}</p><div class="tg"><span>JLPT ${lv}</span><span>${t('vocab_tag', { n: cnt })}</span><span>${t('listen_tag')}</span></div></div>`;
@@ -1878,8 +1969,11 @@ function render() {
       <div class="dp"><div class="dp-lbl">${t('total_progress_grammar', { lv })}</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(gProg.totalOffset/cnt*100)}%"></div></div>
       <div class="dp-txt">${t('progress_txt', { n: gProg.totalOffset, total: cnt })}</div></div>
       <button class="daily-btn ${grammarDailyMode?'on':''}" onclick="toggleGrammarDailyMode()">${grammarDailyMode?t('show_all'):t('daily_mode')}</button>
-      ${grammarDailyMode&&gProg.totalOffset>0?`<button class="daily-btn" onclick="prevGrammarBatch()">${t('prev_batch')}</button>`:''}
-      ${grammarDailyMode&&gProg.totalOffset<cnt?`<button class="daily-btn" onclick="nextGrammarBatch()">${t('next_batch')}</button>`:''}
+      ${grammarDailyMode?`<div class="daily-batch-row">
+        ${gProg.totalOffset>0?`<button class="daily-btn" onclick="prevGrammarBatch()">${t('prev_batch')}</button>`:''}
+        ${gProg.totalOffset<cnt?`<button class="daily-btn" onclick="nextGrammarBatch()">${t('next_batch')}</button>`:''}
+        ${gProg.totalOffset>0?`<button class="daily-btn" onclick="resetGrammarBatch()" title="${t('reset_progress')}">↺</button>`:''}
+      </div>`:''}
     </div>`;
     if (!grammarDailyMode) {
       h += `<div class="intro"><h2>${t('grammar_title', { lv })}</h2><p>${t('grammar_desc', { lv, n: cnt })}</p><div class="tg"><span>JLPT ${lv}</span><span>${t('grammar_tag', { n: cnt })}</span><span>${t('brand_tag')}</span></div></div>`;

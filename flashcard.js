@@ -331,6 +331,7 @@ const FlashCard = (() => {
           <div class="fc-word" style="font-size:28px">${item.w}</div>
           ${item.w!==item.r?`<div class="fc-reading">${item.r}</div>`:''}
           <div class="fc-meaning">${typeof cvt==='function'?cvt(item.m):item.m}</div>
+          ${Array.isArray(item.e)&&item.e.length?`<div class="fc-ex">${item.e.map(ex=>`<div class="fc-ex-row"><div class="fc-ex-j">${ex.j}<svg class="fc-ex-spk" onclick="event.stopPropagation();speak('${(ex.j||'').replace(/'/g,"\\'")}')" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg></div><div class="fc-ex-z">${typeof cvt==='function'?cvt(ex.z):ex.z}</div></div>`).join('')}</div>`:''}
           <div class="fc-btns">
             <button class="fc-btn fc-no" onclick="event.stopPropagation();FlashCard.answer('unknown')">✗ 不會<span class="fc-btn-hint">${gradeLabel('unknown')}</span></button>
             <button class="fc-btn fc-soso" onclick="event.stopPropagation();FlashCard.answer('soso')">◯ 不熟<span class="fc-btn-hint">${gradeLabel('soso')}</span></button>

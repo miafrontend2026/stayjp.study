@@ -91,6 +91,7 @@ body {
   letter-spacing: 0.01em;
   padding-bottom: 56px;
   -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
 }
 
 /* == Header == */
@@ -426,6 +427,7 @@ td.hl { color: var(--em-color); font-weight: 600; }
       <a href="#te-form">て形</a>
       <a href="#quiz">練習</a>
       <a href="#pairs">自他動詞</a>
+      <a href="#pairs-quiz">自他練習</a>
     </nav>
     <button class="lang-btn" id="langBtn" onclick="cycleLang()">繁</button>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" aria-label="切換深色模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg></button>
@@ -1160,7 +1162,123 @@ td.hl { color: var(--em-color); font-weight: 600; }
       <div class="tip"><strong>關鍵區別：</strong>自動詞用「が」標記主語，他動詞用「を」標記受詞。看到「を」基本就是他動詞。</div>
     </div></div>
   </div>
+
+  <!-- 自他動詞 互動練習 -->
+  <div class="card open" id="pairs-quiz">
+    <div class="card-h" onclick="toggleCard('pairs-quiz')">
+      <span class="tag" style="background:#2563EB">練</span>
+      <span class="title">自他動詞 互動練習</span>
+      <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="card-b"><div class="card-x">
+      <p style="color:var(--tx2);font-size:13px;margin-bottom:12px">看句子裡的助詞（が／を）和語意，選出對應的自動詞或他動詞形式。答錯會顯示提示，連續答對 5 題自動換下一輪。</p>
+      <div id="ptqWrap"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="spk" style="padding:6px 14px;width:auto;font-size:13px" onclick="PTQuiz.next()">下一題 →</button>
+        <button class="spk" style="padding:6px 14px;width:auto;font-size:13px" onclick="PTQuiz.reset()">重置分數</button>
+        <span id="ptqScore" style="margin-left:auto;font-size:13px;color:var(--tx2);align-self:center"></span>
+      </div>
+    </div></div>
+  </div>
 </section>
+
+<script>
+// 自他動詞題庫：pair = [自動詞, 他動詞]，sentences 兩句分別對應自/他用法
+const PT_DATA = [
+  { ji:{w:"開く",r:"あく",m:"（自然）打開"}, ta:{w:"開ける",r:"あける",m:"（人）打開"},
+    sentences:[
+      {kind:"ji", j:"ドア___。", blank:"が開いた", hint:"門「自己」開了 → 自動詞，用 が"},
+      {kind:"ta", j:"彼がドア___。", blank:"を開けた", hint:"有人「打開」門 → 他動詞，用 を"} ]},
+  { ji:{w:"閉まる",r:"しまる",m:"（自然）關上"}, ta:{w:"閉める",r:"しめる",m:"（人）關上"},
+    sentences:[
+      {kind:"ji", j:"窓___。", blank:"が閉まった", hint:"窗戶自己關了 → 自動詞"},
+      {kind:"ta", j:"私は窓___。", blank:"を閉めた", hint:"我把窗戶關上 → 他動詞"} ]},
+  { ji:{w:"始まる",r:"はじまる",m:"（自然）開始"}, ta:{w:"始める",r:"はじめる",m:"（人）開始"},
+    sentences:[
+      {kind:"ji", j:"会議___。", blank:"が始まった", hint:"會議「開始了」這個事件 → 自動詞"},
+      {kind:"ta", j:"先生は授業___。", blank:"を始めた", hint:"老師主動開始上課 → 他動詞"} ]},
+  { ji:{w:"集まる",r:"あつまる",m:"聚集"}, ta:{w:"集める",r:"あつめる",m:"收集"},
+    sentences:[
+      {kind:"ji", j:"人___。", blank:"が集まった", hint:"人們聚過來 → 自動詞"},
+      {kind:"ta", j:"彼は切手___。", blank:"を集めている", hint:"他在收集 → 他動詞"} ]},
+  { ji:{w:"壊れる",r:"こわれる",m:"壞掉"}, ta:{w:"壊す",r:"こわす",m:"弄壞"},
+    sentences:[
+      {kind:"ji", j:"時計___。", blank:"が壊れた", hint:"鐘自己壞了 → 自動詞"},
+      {kind:"ta", j:"弟がおもちゃ___。", blank:"を壊した", hint:"弟弟弄壞玩具 → 他動詞"} ]},
+  { ji:{w:"消える",r:"きえる",m:"消失、熄滅"}, ta:{w:"消す",r:"けす",m:"消除、關掉"},
+    sentences:[
+      {kind:"ji", j:"電気___。", blank:"が消えた", hint:"燈自己滅了 → 自動詞"},
+      {kind:"ta", j:"母は電気___。", blank:"を消した", hint:"媽媽把燈關掉 → 他動詞"} ]},
+  { ji:{w:"見つかる",r:"みつかる",m:"被找到"}, ta:{w:"見つける",r:"みつける",m:"找到"},
+    sentences:[
+      {kind:"ji", j:"鍵___。", blank:"が見つかった", hint:"鑰匙被找到（被動感）→ 自動詞"},
+      {kind:"ta", j:"私は鍵___。", blank:"を見つけた", hint:"我主動找到 → 他動詞"} ]},
+  { ji:{w:"入る",r:"はいる",m:"進入"}, ta:{w:"入れる",r:"いれる",m:"放入"},
+    sentences:[
+      {kind:"ji", j:"猫が部屋___。", blank:"に入った", hint:"貓進入房間 → 自動詞"},
+      {kind:"ta", j:"財布にお金___。", blank:"を入れた", hint:"把錢放入錢包 → 他動詞"} ]},
+  { ji:{w:"出る",r:"でる",m:"出去、出現"}, ta:{w:"出す",r:"だす",m:"拿出"},
+    sentences:[
+      {kind:"ji", j:"月___。", blank:"が出た", hint:"月亮出現 → 自動詞"},
+      {kind:"ta", j:"鞄から本___。", blank:"を出した", hint:"從包包拿出書 → 他動詞"} ]},
+  { ji:{w:"止まる",r:"とまる",m:"停下"}, ta:{w:"止める",r:"とめる",m:"停止"},
+    sentences:[
+      {kind:"ji", j:"電車___。", blank:"が止まった", hint:"電車自己停下 → 自動詞"},
+      {kind:"ta", j:"彼は車___。", blank:"を止めた", hint:"他把車停下 → 他動詞"} ]},
+];
+
+const PTQuiz = (function(){
+  let pool = [], idx = 0, streak = 0, total = 0, correct = 0, answered = false;
+  function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function buildPool(){ pool = []; PT_DATA.forEach(p => p.sentences.forEach(s => pool.push({pair:p, s}))); shuffle(pool); idx = 0; }
+  function curr(){ return pool[idx]; }
+  function render(){
+    const w = document.getElementById('ptqWrap'); if (!w) return;
+    if (!pool.length) buildPool();
+    const q = curr(); if (!q) { w.innerHTML='<div style="padding:14px;color:var(--tx2)">題目讀取失敗</div>'; return; }
+    const opts = shuffle([
+      { kind:'ji', label:`${q.pair.ji.w}（${q.pair.ji.r}）`, m:q.pair.ji.m },
+      { kind:'ta', label:`${q.pair.ta.w}（${q.pair.ta.r}）`, m:q.pair.ta.m },
+    ]);
+    w.innerHTML = `
+      <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:14px">
+        <div style="font-size:18px;color:var(--tx);margin-bottom:6px">${q.s.j.replace('___','<span style=\"color:var(--ac2);border-bottom:2px dashed var(--ac2);padding:0 6px\">？</span>')}</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:12px">選擇正確的形式：</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${opts.map(o => `<button class="ptq-opt" data-kind="${o.kind}" onclick="PTQuiz.choose('${o.kind}',this)" style="padding:10px 14px;border:1px solid var(--bd);background:var(--bg);border-radius:8px;cursor:pointer;text-align:left;color:var(--tx);font-size:14px">${o.label} <span style="color:var(--tx2);font-size:12px">${o.m}</span></button>`).join('')}
+        </div>
+        <div id="ptqFb" style="margin-top:10px;font-size:13px;min-height:18px"></div>
+      </div>`;
+    answered = false;
+    updateScore();
+  }
+  function updateScore(){
+    const el = document.getElementById('ptqScore'); if (!el) return;
+    el.textContent = `得分 ${correct}/${total} ・ 連對 ${streak}`;
+  }
+  function choose(kind, btn){
+    if (answered) return; answered = true;
+    const q = curr(); const ok = (kind === q.s.kind);
+    total++; if (ok) { correct++; streak++; } else streak = 0;
+    document.querySelectorAll('#ptqWrap .ptq-opt').forEach(b => {
+      const k = b.dataset.kind;
+      if (k === q.s.kind) b.style.background = '#10B98122', b.style.borderColor = '#10B981';
+      else if (k === kind) b.style.background = '#EF444422', b.style.borderColor = '#EF4444';
+      b.style.cursor = 'default';
+    });
+    const fb = document.getElementById('ptqFb');
+    fb.innerHTML = ok
+      ? `<span style="color:#10B981">✓ 正解 — ${q.s.j.replace('___', '<strong>'+q.s.blank+'</strong>')}</span>`
+      : `<span style="color:#EF4444">✗ ${q.s.hint}</span><br><span style="color:var(--tx2)">正解：${q.s.j.replace('___','<strong>'+q.s.blank+'</strong>')}</span>`;
+    updateScore();
+    if (ok && streak > 0 && streak % 5 === 0) setTimeout(next, 800);
+  }
+  function next(){ idx++; if (idx >= pool.length) buildPool(); render(); }
+  function reset(){ correct = 0; total = 0; streak = 0; buildPool(); render(); }
+  return { render, choose, next, reset };
+})();
+document.addEventListener('DOMContentLoaded', () => PTQuiz.render());
+</script>
 
 </main>
 
@@ -1301,10 +1419,13 @@ function toggleCard(id) {
 }
 
 // ========== TTS ==========
+function hiraToKata(s) {
+  return String(s||'').replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+}
 function speak(text) {
   if (!('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(hiraToKata(text));
   u.lang = 'ja-JP';
   u.rate = 0.85;
   const voices = speechSynthesis.getVoices();
