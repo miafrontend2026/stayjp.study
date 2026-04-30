@@ -1168,25 +1168,81 @@ if (fbConfig) {
 }
 
 // ========== AUTH ==========
-// 偵測 LINE/FB/IG 內嵌瀏覽器（Google OAuth 會回 disallowed_useragent）
+// Google OAuth 在 WebView/內嵌瀏覽器會回 disallowed_useragent，是 Google 端封鎖無法繞過
 function isInAppBrowser() {
   const ua = navigator.userAgent || '';
-  return /FBAN|FBAV|Instagram|Line\/|MicroMessenger|Twitter|TikTok|KAKAOTALK/i.test(ua);
+  // Line / FB / IG / Threads(Barcelona) / WeChat / Twitter(X) / TikTok / KakaoTalk / Naver
+  return /FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|Twitter|TikTok|KAKAOTALK|NAVER|Barcelona|BytedanceWebview/i.test(ua);
 }
-function showInAppBanner() {
-  if (document.getElementById('inAppBanner')) return;
-  const b = document.createElement('div');
-  b.id = 'inAppBanner';
-  b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:500;background:var(--note-bg,#FFF8F0);border-bottom:1px solid var(--bd);color:var(--note-tx,#92400E);font-size:13px;padding:10px 14px;line-height:1.6;text-align:center';
-  b.innerHTML = '此頁在 LINE/FB 內嵌瀏覽器無法登入 Google — 請點右上角 <strong>「⋯」→「在瀏覽器開啟」</strong>再試。<button onclick="this.parentNode.remove()" style="margin-left:10px;background:transparent;border:1px solid currentColor;border-radius:6px;padding:2px 8px;color:inherit;cursor:pointer">知道了</button>';
-  document.body.appendChild(b);
+function detectPlatform() {
+  const ua = navigator.userAgent || '';
+  if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+  if (/Android/i.test(ua)) return 'android';
+  return 'desktop';
+}
+function showInAppHelp() {
+  // 移除舊的 banner（如果有）
+  const old = document.getElementById('inAppBanner'); if (old) old.remove();
+  const url = location.href;
+  const platform = detectPlatform();
+  const title = '無法在此瀏覽器登入';
+  const msg = '此頁開在 LINE / Threads / IG 等 App 的內嵌瀏覽器中，Google 會封鎖登入。\n請改用系統瀏覽器（Safari / Chrome）開啟本站。';
+
+  const iosBtn = `<a class="cc-btn primary" href="x-safari-https://${location.host}${location.pathname}${location.search}${location.hash}" style="text-decoration:none;display:flex;align-items:center;justify-content:center">用 Safari 開啟</a>`;
+  const androidBtn = `<a class="cc-btn primary" href="intent://${location.host}${location.pathname}${location.search}${location.hash}#Intent;scheme=https;package=com.android.chrome;end" style="text-decoration:none;display:flex;align-items:center;justify-content:center">用 Chrome 開啟</a>`;
+  const copyBtn = `<button class="cc-btn" data-act="copy">複製連結</button>`;
+  const closeBtn = `<button class="cc-btn" data-act="cancel">關閉</button>`;
+  const primaryBtn = platform === 'ios' ? iosBtn : platform === 'android' ? androidBtn : '';
+  const tip = platform === 'ios'
+    ? '若按鈕沒反應，請點右下角分享 / 右上角「⋯」→「在 Safari 開啟」。'
+    : platform === 'android'
+    ? '若按鈕沒反應，請點右上角「⋯」→「在瀏覽器中開啟」。'
+    : '請複製網址後到 Safari / Chrome 貼上開啟。';
+
+  const mask = document.createElement('div');
+  mask.className = 'cc-mask';
+  mask.innerHTML = `<div class="cc-box" role="dialog" aria-modal="true">
+    <div class="cc-title">${title}</div>
+    <div class="cc-msg">${msg}\n\n${tip}</div>
+    <div class="cc-btns" style="flex-direction:column;gap:8px">
+      ${primaryBtn}
+      ${copyBtn}
+      ${closeBtn}
+    </div>
+  </div>`;
+  document.body.appendChild(mask);
+  requestAnimationFrame(() => mask.classList.add('on'));
+  const close = () => { mask.classList.remove('on'); setTimeout(()=>mask.remove(), 200); };
+  mask.addEventListener('click', async e => {
+    if (e.target === mask || e.target.dataset.act === 'cancel') close();
+    else if (e.target.dataset.act === 'copy') {
+      try {
+        await navigator.clipboard.writeText(url);
+        e.target.textContent = '✓ 已複製，請到瀏覽器貼上';
+        e.target.classList.add('primary');
+      } catch(err) {
+        // fallback: 選取
+        const ta = document.createElement('textarea');
+        ta.value = url; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); e.target.textContent = '✓ 已複製'; } catch(_) { e.target.textContent = '複製失敗，請長按網址列'; }
+        ta.remove();
+      }
+    }
+  });
 }
 
 function handleAuth() {
   if (currentUser) { auth.signOut(); currentUser = null; updateAuthUI(); return; }
-  if (isInAppBrowser()) { showInAppBanner(); return; }
+  if (isInAppBrowser()) { showInAppHelp(); return; }
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => alert('登入失敗: ' + e.message));
 }
+// 進站若在內嵌瀏覽器，主動提示一次（避免使用者點了登入才發現）
+window.addEventListener('load', () => {
+  if (isInAppBrowser() && !sessionStorage.getItem('inAppHelpShown')) {
+    sessionStorage.setItem('inAppHelpShown', '1');
+    setTimeout(showInAppHelp, 600);
+  }
+});
 function updateAuthUI() {
   const area = document.getElementById('authArea');
   if (!area) return;
