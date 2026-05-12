@@ -36,6 +36,22 @@ service cloud.firestore {
         request.resource.data.message.size() <= 5000;
     }
 
+    // 訪客 streak 雲端備份（已登入用戶）— 結構併入 users/{uid}.streak，不需要獨立規則
+
+    // 公開累積計數器 — home.html 顯示「已有 X 位學員」
+    // 第一個訪客建 doc，之後每位新訪客 +1（前端 localStorage 防同人重複）
+    // rules 限制：只能 +1，不能跳號 / 倒退 / 寫入其他 key，避免被洗
+    match /stats/{doc} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasOnly(['learners']) &&
+        request.resource.data.learners == 1;
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['learners']) &&
+        request.resource.data.learners == resource.data.learners + 1;
+      allow delete: if false;
+    }
+
     // 預設拒絕：未明確允許的所有路徑皆擋
     match /{document=**} {
       allow read, write: if false;

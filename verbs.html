@@ -7,7 +7,13 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2WP4D34LE3"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-2WP4D34LE3');</script>
 <link rel="icon" href="stayjpplan.png?v=3" type="image/png">
-<link rel="apple-touch-icon" href="stayjpplan.png?v=3">
+<link rel="apple-touch-icon" sizes="192x192" href="stayjpplan-192.png?v=1">
+<link rel="apple-touch-icon" sizes="512x512" href="stayjpplan.png?v=3">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="再留計劃">
 <meta name="theme-color" content="#2C2C2C">
 <meta name="description" content="日語動詞變化完全攻略。三類動詞、12種變化形、て形音變、自他動詞配對，附互動練習。">
 <meta property="og:title" content="再留計劃 — 動詞變化完全攻略">
@@ -1286,9 +1292,12 @@ document.addEventListener('DOMContentLoaded', () => PTQuiz.render());
 
 <footer class="ft">
   再留計劃 &mdash; <a href="index.html">回首頁</a> · <a href="contact.html">意見回饋</a>
+  <div style="margin-top:4px;font-size:12px;opacity:.7">語音：VOICEVOX:四国めたん</div>
 </footer>
 
 <script src="i18n.js"></script>
+<!-- TTS manifest: text -> pre-rendered VOICEVOX mp3 hash. -->
+<script src="audio/tts/manifest.js"></script>
 <script>
 // ========== I18N (繁/簡切換 via OpenCC runtime 轉換) ==========
 const LANG_CYCLE = ['zh-TW', 'zh-CN'];
@@ -1419,10 +1428,13 @@ function toggleCard(id) {
 }
 
 // ========== TTS ==========
+// Same strategy as index.html: prefer pre-rendered VOICEVOX mp3 keyed by exact text
+// in window.__TTS, fall back to SpeechSynthesis if missing.
 function hiraToKata(s) {
   return String(s||'').replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
 }
-function speak(text) {
+let __ttsAudio = null;
+function speakBrowser(text) {
   if (!('speechSynthesis' in window)) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(hiraToKata(text));
@@ -1432,6 +1444,19 @@ function speak(text) {
   const ja = voices.find(v => v.lang.startsWith('ja'));
   if (ja) u.voice = ja;
   speechSynthesis.speak(u);
+}
+function speak(text) {
+  const t = (text || '').trim();
+  if (!t) return;
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (__ttsAudio) { try { __ttsAudio.pause(); } catch (e) {} __ttsAudio = null; }
+  const hash = window.__TTS && window.__TTS[t];
+  if (hash) {
+    __ttsAudio = new Audio('audio/tts/' + hash + '.mp3');
+    __ttsAudio.play().catch(() => speakBrowser(t));
+    return;
+  }
+  speakBrowser(t);
 }
 if ('speechSynthesis' in window) {
   speechSynthesis.getVoices();
@@ -1702,5 +1727,6 @@ function updateScore() {
     `答對 ${quizState.correct} / ${quizState.total}（${pct}%）`;
 }
 </script>
+<!-- Cloudflare Web Analytics --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;: &quot;0a94a20c2737440a86f55c4241011f68&quot;}"></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

@@ -7,9 +7,12 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2WP4D34LE3"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-2WP4D34LE3');</script>
 <link rel="icon" href="stayjpplan.png?v=3" type="image/png">
-<link rel="apple-touch-icon" href="stayjpplan.png?v=3">
+<link rel="apple-touch-icon" sizes="192x192" href="stayjpplan-192.png?v=1">
+<link rel="apple-touch-icon" sizes="512x512" href="stayjpplan.png?v=3">
 <link rel="manifest" href="manifest.json">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="再留計劃">
 <meta name="description" content="免費 JLPT N5~N1 線上備考工具。7710+ 單字、382 文法點、模擬考、SRS 間隔複習、聽力讀解練習。不用下載不用註冊，打開瀏覽器就能用。">
 <meta property="og:title" content="再留計劃 — 免費 JLPT N5~N1 備考工具｜單字・文法・模考・複習">
@@ -378,6 +381,40 @@ select::-ms-expand { display: none; }
   border-radius: 16px; padding: 24px 28px;
   margin-bottom: 24px; position: relative; overflow: hidden;
 }
+/* Shadowing 跟讀模式 — full-screen overlay with auto-cycle. */
+.shadow-mask { display: flex; align-items: center; justify-content: center; padding: 20px; }
+.shadow-box { background: var(--bg2); border: 1px solid var(--bd); border-radius: 20px; padding: 36px 32px; max-width: 600px; width: 100%; text-align: center; }
+.shadow-progress { font-size: 13px; color: var(--tx2); font-weight: 600; letter-spacing: .05em; }
+.shadow-status { font-size: 14px; color: var(--ac); font-weight: 600; margin-top: 8px; }
+.shadow-j { font-size: clamp(22px, 4vw, 32px); font-weight: 700; line-height: 1.6; color: var(--tx); margin: 24px 0 12px; min-height: 1.6em; }
+.shadow-z { font-size: 14px; color: var(--tx2); margin-bottom: 28px; min-height: 1.4em; }
+.shadow-controls { display: flex; gap: 12px; justify-content: center; margin-bottom: 18px; }
+.shadow-btn { width: 44px; height: 44px; border: 1px solid var(--bd); border-radius: 50%; background: var(--bg2); color: var(--tx); font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+.shadow-btn:hover { background: var(--bg3); border-color: var(--ac); }
+.shadow-btn-main { width: 56px; height: 56px; background: var(--ac); color: #fff; border-color: var(--ac); font-size: 20px; }
+.shadow-btn-main:hover { background: var(--ac); opacity: .9; }
+.shadow-options { display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--tx2); margin-bottom: 10px; }
+.shadow-options select { padding: 4px 8px; border: 1px solid var(--bd); border-radius: 6px; background: var(--bg2); color: var(--tx); font-size: 12px; }
+.shadow-options input[type=checkbox] { vertical-align: middle; }
+.shadow-hint { font-size: 11px; color: var(--tx3); letter-spacing: .03em; }
+.shadow-trigger { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--ac); border-radius: 999px; background: rgba(212,101,74,.06); color: var(--ac); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.shadow-trigger:hover { background: var(--ac); color: #fff; }
+/* Streak badge in header. Hidden by default, shown by JS once a streak exists. */
+.streak-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid var(--bd); border-radius: 999px; background: var(--bg2); color: var(--tx); font-size: 13px; font-weight: 600; cursor: pointer; line-height: 1; white-space: nowrap; transition: background .15s, border-color .15s; }
+.streak-btn:hover { background: var(--bg3); }
+.streak-flame { font-size: 14px; }
+.streak-num { font-variant-numeric: tabular-nums; }
+.streak-btn.streak-warn { border-color: rgba(212,101,74,.5); background: rgba(212,101,74,.08); }
+.streak-btn.streak-warn::after { content: '☁️'; font-size: 11px; margin-left: 2px; }
+/* Affiliate "recommended resources" block — content-style, not banner. */
+.aff-block { margin: 32px 0 16px; padding: 20px 22px; border: 1px solid var(--bd); border-radius: 14px; background: var(--bg2); }
+.aff-title { font-size: 14px; font-weight: 600; color: var(--tx2); margin-bottom: 12px; }
+.aff-card { background: var(--bg3); border-radius: 10px; padding: 14px 16px; }
+.aff-name { font-size: 15px; font-weight: 700; color: var(--tx); margin-bottom: 4px; }
+.aff-desc { font-size: 13px; color: var(--tx2); line-height: 1.6; margin-bottom: 10px; }
+.aff-cta { display: inline-block; padding: 8px 16px; border-radius: 8px; background: var(--ac); color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; }
+.aff-cta:hover { opacity: .9; }
+.aff-disclosure { margin-top: 10px; font-size: 11px; color: var(--tx2); opacity: .7; line-height: 1.5; }
 .intro::before {
   content: ''; position: absolute; top: -50px; right: -50px;
   width: 160px; height: 160px;
@@ -1072,6 +1109,9 @@ select::-ms-expand { display: none; }
     <a href="home.html" style="color:var(--tx3);font-size:11px;text-decoration:none;white-space:nowrap;padding:4px 8px;border-radius:8px;transition:color .2s,background .2s" onmouseover="this.style.color='var(--ac)';this.style.background='var(--bg3)'" onmouseout="this.style.color='var(--tx3)';this.style.background='none'" data-i18n="about">關於</a>
     <button class="lang-btn" id="langBtn" onclick="cycleLang()">繁</button>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" data-i18n-aria="theme_toggle" aria-label="切換深色模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg></button>
+    <button class="streak-btn" id="streakBtn" onclick="Streak.showInfo()" title="連續學習天數" style="display:none">
+      <span class="streak-flame">🔥</span><span class="streak-num" id="streakNum">0</span>
+    </button>
     <div class="auth-area" id="authArea">
       <button class="auth-btn" id="authBtn" onclick="handleAuth()">登入</button>
     </div>
@@ -1116,6 +1156,8 @@ select::-ms-expand { display: none; }
   <div style="margin-bottom:10px"><a href="home.html#support" style="font-size:12px;color:var(--ac);text-decoration:none">💝 支持 / 贊助</a></div>
   <div data-i18n="copyright">&copy; 2026 再留計劃 — All rights reserved.</div>
   <div style="margin-top:4px" data-i18n="disclaimer">本站內容為原創整理，不隸屬於 JLPT 官方或任何教育機構。</div>
+  <div style="margin-top:4px;font-size:12px;opacity:.7">語音：VOICEVOX:四国めたん</div>
+  <div style="margin-top:4px;font-size:12px;opacity:.6">合作夥伴：<a href="https://www.italki.com/affshare?ref=af32106882&utm_source=stayjp&utm_medium=footer" target="_blank" rel="sponsored noopener" style="color:inherit;text-decoration:underline" onclick="track('affiliate_click', { partner: 'italki', slot: 'footer' })">italki 線上日文家教</a></div>
   <div style="margin-top:4px"><span id="ftInfo"></span></div>
   <div style="margin-top:6px;opacity:.5"><a href="contact.html" data-i18n="feedback">意見回饋</a></div>
 </footer>
@@ -1139,6 +1181,9 @@ select::-ms-expand { display: none; }
 <script src="grammar-n1.js"></script>
 <!-- Confusables -->
 <script src="confusables.js"></script>
+
+<!-- TTS manifest: maps Japanese text -> pre-rendered VOICEVOX mp3 hash. Generated by scripts/tts/generate.mjs. -->
+<script src="audio/tts/manifest.js"></script>
 
 <!-- i18n -->
 <script src="i18n.js"></script>
@@ -1164,7 +1209,7 @@ if (fbConfig) {
   firebase.initializeApp(fbConfig);
   auth = firebase.auth();
   db = firebase.firestore();
-  auth.onAuthStateChanged(u => { currentUser = u; updateAuthUI(); loadFavorites(); loadCloudData(); });
+  auth.onAuthStateChanged(u => { currentUser = u; updateAuthUI(); loadFavorites(); loadCloudData(); if (typeof Streak !== 'undefined') { Streak.syncDown(); Streak.render(); } });
 }
 
 // ========== AUTH ==========
@@ -1406,11 +1451,13 @@ function favKey() { return currentMode==='vocab' ? 'v'+currentLevel : currentLev
 function toggleFav(id) {
   const k = favKey();
   const idx = favorites[k].indexOf(id);
+  const adding = idx === -1;
   if (idx > -1) favorites[k].splice(idx, 1); else favorites[k].push(id);
   saveFavLocal(); saveFavCloud();
   const star = document.querySelector(`[data-fid="${id}"] .star, #${CSS.escape(id)} .star`);
   if (star) star.classList.toggle('on', favorites[k].includes(id));
   updateFavCount();
+  track(adding ? 'fav_add' : 'fav_remove', { kind: k });
 }
 function updateFavCount() {
   const btn = document.getElementById('favBtn');
@@ -1486,24 +1533,383 @@ function doRender() {
 }
 
 // ========== TTS ==========
+// Strategy: every spoken Japanese string has been pre-rendered with VOICEVOX
+// (四国めたん) and is keyed in window.__TTS by exact text -> hash. speak() prefers
+// the pre-rendered mp3; if the text isn't in the manifest (e.g. dynamically
+// generated listening sentences) we fall back to the browser SpeechSynthesis API.
 function hiraToKata(s) {
-  // 部分 TTS 引擎會把單字開頭的「は」當主題助詞讀 wa；轉成片假名強制走音節讀法
+  // SpeechSynthesis fallback: some browsers misread leading は as the topic 'wa'.
+  // Forcing katakana avoids that quirk.
   return String(s||'').replace(/[ぁ-ゖ]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
 }
-function speak(text) {
+let __ttsAudio = null;
+function speakBrowser(text) {
   if (!window.speechSynthesis) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(hiraToKata(text));
   u.lang = 'ja-JP';
   u.rate = 0.85;
-  // Try to find Japanese voice
   const voices = speechSynthesis.getVoices();
   const jaVoice = voices.find(v => v.lang.startsWith('ja'));
   if (jaVoice) u.voice = jaVoice;
   speechSynthesis.speak(u);
 }
-// Preload voices
+function speak(text) {
+  const t = (text || '').trim();
+  if (!t) return;
+  // Stop any audio currently playing (browser TTS or previous mp3).
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (__ttsAudio) { try { __ttsAudio.pause(); } catch (e) {} __ttsAudio = null; }
+  const hash = window.__TTS && window.__TTS[t];
+  track('audio_play', { source: hash ? 'voicevox' : 'browser_tts', mode: currentMode });
+  if (hash) {
+    __ttsAudio = new Audio('audio/tts/' + hash + '.mp3');
+    __ttsAudio.play().catch(() => speakBrowser(t));
+    return;
+  }
+  speakBrowser(t);
+}
 if (window.speechSynthesis) speechSynthesis.getVoices();
+
+
+// ========== SHADOWING (跟讀模式) ==========
+// Auto-cycle through the currently visible Japanese texts: show -> play -> pause for repetition
+// -> play again -> next. Designed to actually exercise the 7000+ pre-rendered VOICEVOX clips
+// (otherwise users only ever click one at a time). Falls back to browser TTS when a hash misses.
+const Shadow = (() => {
+  let queue = [], idx = 0, paused = false;
+  let audioEl = null;
+  let stage = 0; // 0 = first play, 1 = repeat-window, 2 = second play, 3 = gap
+  let pendingTimer = null;
+  let speed = 1.0; // 0.75 / 1 / 1.25
+  let repeatWindow = true; // include shadow-repeat pause between plays
+
+  function open() {
+    closeOverlay();
+    const mask = document.createElement('div');
+    mask.id = 'shadowMask';
+    mask.className = 'cc-mask shadow-mask';
+    mask.innerHTML = `<div class="shadow-box">
+      <div class="shadow-progress"><span id="shadowIdx">1</span> / <span id="shadowTotal">${queue.length}</span></div>
+      <div class="shadow-status" id="shadowStatus">🔊 播放中</div>
+      <div class="shadow-j" id="shadowJ"></div>
+      <div class="shadow-z" id="shadowZ"></div>
+      <div class="shadow-controls">
+        <button class="shadow-btn" data-act="prev" title="上一句 (←)">◀</button>
+        <button class="shadow-btn" data-act="replay" title="重播 (R)">↻</button>
+        <button class="shadow-btn shadow-btn-main" data-act="toggle" title="暫停/繼續 (Space)">⏸</button>
+        <button class="shadow-btn" data-act="next" title="下一句 (→)">▶</button>
+      </div>
+      <div class="shadow-options">
+        <label>速度 <select id="shadowSpeed"><option value="0.75">0.75x</option><option value="1" selected>1x</option><option value="1.25">1.25x</option></select></label>
+        <label><input type="checkbox" id="shadowRepeat" checked> 跟讀停頓</label>
+        <button class="shadow-btn" data-act="exit" title="退出 (Esc)">✕</button>
+      </div>
+      <div class="shadow-hint">Space 暫停 · ← → 切換 · R 重播 · Esc 退出</div>
+    </div>`;
+    document.body.appendChild(mask);
+    requestAnimationFrame(() => mask.classList.add('on'));
+    mask.addEventListener('click', e => {
+      const act = e.target.dataset && e.target.dataset.act;
+      if (act === 'prev') prev();
+      else if (act === 'next') next();
+      else if (act === 'replay') replay();
+      else if (act === 'toggle') togglePause();
+      else if (act === 'exit') exit();
+    });
+    document.getElementById('shadowSpeed').addEventListener('change', e => {
+      speed = parseFloat(e.target.value);
+      if (audioEl) audioEl.playbackRate = speed;
+    });
+    document.getElementById('shadowRepeat').addEventListener('change', e => {
+      repeatWindow = e.target.checked;
+    });
+    document.addEventListener('keydown', onKey);
+  }
+
+  function closeOverlay() {
+    const old = document.getElementById('shadowMask');
+    if (old) { old.classList.remove('on'); setTimeout(() => old.remove(), 200); }
+    document.removeEventListener('keydown', onKey);
+  }
+
+  function onKey(e) {
+    if (!document.getElementById('shadowMask')) return;
+    if (e.key === ' ') { e.preventDefault(); togglePause(); }
+    else if (e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft') prev();
+    else if (e.key === 'r' || e.key === 'R') replay();
+    else if (e.key === 'Escape') exit();
+  }
+
+  function renderItem() {
+    const item = queue[idx];
+    const idxEl = document.getElementById('shadowIdx');
+    const jEl = document.getElementById('shadowJ');
+    const zEl = document.getElementById('shadowZ');
+    if (!idxEl) return;
+    idxEl.textContent = idx + 1;
+    jEl.textContent = item.j;
+    zEl.textContent = item.z || '';
+  }
+
+  function setStatus(s) {
+    const el = document.getElementById('shadowStatus');
+    if (el) el.textContent = s;
+    const toggleBtn = document.querySelector('#shadowMask [data-act="toggle"]');
+    if (toggleBtn) toggleBtn.textContent = paused ? '▶' : '⏸';
+  }
+
+  function clearTimer() {
+    if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+    if (audioEl) { try { audioEl.onended = null; audioEl.pause(); } catch (e) {} audioEl = null; }
+    if (window.speechSynthesis) speechSynthesis.cancel();
+  }
+
+  function playOnce(text, onEnd) {
+    if (paused) return;
+    const hash = window.__TTS && window.__TTS[text];
+    if (hash) {
+      audioEl = new Audio('audio/tts/' + hash + '.mp3');
+      audioEl.playbackRate = speed;
+      audioEl.onended = () => { audioEl = null; onEnd && onEnd(); };
+      audioEl.play().catch(() => { audioEl = null; onEnd && onEnd(); });
+    } else {
+      // Browser TTS — no reliable end event for our use; estimate duration.
+      speakBrowser(text);
+      const ms = Math.max(1200, text.length * 180 / speed);
+      pendingTimer = setTimeout(() => { pendingTimer = null; onEnd && onEnd(); }, ms);
+    }
+  }
+
+  function step() {
+    if (paused || idx >= queue.length) return;
+    const item = queue[idx];
+    if (!item) return;
+    if (stage === 0) {
+      setStatus('🔊 播放中');
+      renderItem();
+      playOnce(item.j, () => {
+        if (paused) return;
+        if (repeatWindow) {
+          stage = 1;
+          setStatus('🎤 跟著念…');
+          const repeatMs = Math.max(1200, item.j.length * 200 / speed);
+          pendingTimer = setTimeout(() => { pendingTimer = null; stage = 2; step(); }, repeatMs);
+        } else {
+          stage = 3; step();
+        }
+      });
+    } else if (stage === 2) {
+      setStatus('🔊 再播一次');
+      playOnce(item.j, () => {
+        if (paused) return;
+        stage = 3; step();
+      });
+    } else if (stage === 3) {
+      pendingTimer = setTimeout(() => { pendingTimer = null; idx++; stage = 0; if (idx < queue.length) step(); else exit(true); }, 600);
+    }
+  }
+
+  function start(items) {
+    if (!items || !items.length) { alert('沒有內容可跟讀'); return; }
+    queue = items;
+    idx = 0; stage = 0; paused = false;
+    open();
+    track('shadow_start', { count: items.length, mode: currentMode, level: currentLevel });
+    step();
+  }
+
+  function next() { clearTimer(); idx = Math.min(idx + 1, queue.length - 1); stage = 0; step(); }
+  function prev() { clearTimer(); idx = Math.max(idx - 1, 0); stage = 0; step(); }
+  function replay() { clearTimer(); stage = 0; step(); }
+  function togglePause() {
+    paused = !paused;
+    if (paused) { clearTimer(); setStatus('⏸ 暫停'); }
+    else step();
+  }
+  function exit(reachedEnd) {
+    clearTimer();
+    closeOverlay();
+    if (reachedEnd) track('shadow_complete', { count: queue.length, mode: currentMode, level: currentLevel });
+  }
+
+  // Collect playable texts from currently rendered grammar / vocab list.
+  function collectGrammarTexts() {
+    const out = [];
+    document.querySelectorAll('.gc .ex').forEach(ex => {
+      const j = ex.querySelector('.j');
+      const z = ex.querySelector('.z');
+      if (!j) return;
+      // Grammar j contains <em> markup — strip via textContent
+      const jText = (j.cloneNode(true), j.textContent || '').replace(/[\s　]+$/,'').trim();
+      // The .j also contains the speaker SVG label; strip it
+      const cleanJ = jText.replace(/[ \s]*$/, '').trim();
+      if (cleanJ) out.push({ j: cleanJ, z: z ? z.textContent : '' });
+    });
+    return out;
+  }
+  function collectVocabTexts() {
+    const out = [];
+    document.querySelectorAll('.vi').forEach(vi => {
+      const text = vi.dataset.r || vi.dataset.w;
+      const w = vi.dataset.w || '';
+      if (text) out.push({ j: text, z: w !== text ? w : '' });
+    });
+    return out;
+  }
+
+  function startCurrent() {
+    const items = currentMode === 'vocab' ? collectVocabTexts() : collectGrammarTexts();
+    start(items);
+  }
+
+  return { startCurrent, start };
+})();
+
+// ========== ANALYTICS ==========
+// Thin wrapper around gtag so call sites stay readable and we tolerate missing GA
+// (e.g. ad-blocker dropping the script). Param values are kept short — GA4 rejects
+// strings >100 chars and we don't want to leak full sentences.
+function track(event, params) {
+  try {
+    if (typeof gtag === 'function') gtag('event', event, params || {});
+  } catch (e) { /* never crash the UI on telemetry */ }
+}
+
+// ========== STREAK ==========
+// Daily-visit streak counter. Stored in localStorage so anonymous users get value
+// immediately; once they log in we sync to Firestore so the streak survives a cache wipe
+// or device switch. Layered prompts at 3 / 7 days nudge anonymous users to log in to
+// "back up" what they've already accumulated (loss aversion > acquisition framing).
+const Streak = (() => {
+  const KEY = 'streak_v1';
+  const PROMPT_KEY = 'streak_login_prompt_at_7';
+
+  function todayLocal() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
+  function diffDays(a, b) {
+    return Math.round((new Date(b) - new Date(a)) / 86400000);
+  }
+
+  function markToday() {
+    const s = load();
+    const today = todayLocal();
+    if (s.last === today) return s; // already counted today
+    if (!s.last) {
+      s.days = 1;
+    } else {
+      const gap = diffDays(s.last, today);
+      if (gap === 1) s.days = (s.days || 0) + 1;
+      else if (gap > 1) s.days = 1; // streak broken — reset
+      // gap === 0 already handled above; gap < 0 (clock went backward) ignore
+    }
+    s.last = today;
+    s.longest = Math.max(s.longest || 0, s.days);
+    save(s);
+    syncUp(s);
+    if ([3, 7, 14, 30, 60, 100, 365].includes(s.days)) track('streak_milestone', { days: s.days });
+    return s;
+  }
+
+  function syncUp(s) {
+    if (typeof currentUser === 'undefined' || !currentUser || !db) return;
+    db.collection('users').doc(currentUser.uid).set({ streak: s }, { merge: true }).catch(() => {});
+  }
+  // Pull cloud value on login and merge with local — keep whichever has more days/last.
+  async function syncDown() {
+    if (!currentUser || !db) return;
+    try {
+      const doc = await db.collection('users').doc(currentUser.uid).get();
+      const cloud = (doc.exists && doc.data().streak) || null;
+      if (!cloud) { syncUp(load()); return; }
+      const local = load();
+      const winner = (cloud.last || '') > (local.last || '') ? cloud : (cloud.days || 0) > (local.days || 0) ? cloud : local;
+      save(winner);
+      render();
+    } catch (e) { /* offline — local wins */ }
+  }
+
+  function render() {
+    const s = load();
+    const btn = document.getElementById('streakBtn');
+    const num = document.getElementById('streakNum');
+    if (!btn || !num) return;
+    if (!s.days) { btn.style.display = 'none'; return; }
+    btn.style.display = '';
+    num.textContent = s.days;
+    btn.classList.toggle('streak-warn', !currentUser && s.days >= 3);
+  }
+
+  function showInfo() {
+    const s = load();
+    const isLoggedIn = typeof currentUser !== 'undefined' && currentUser;
+    const lines = [
+      `🔥 連續學習 ${s.days || 0} 天`,
+      `最長紀錄：${s.longest || 0} 天`,
+    ];
+    if (!isLoggedIn && s.days >= 3) {
+      lines.push('');
+      lines.push('⚠️ 目前紀錄存在這台裝置；清快取或換裝置會丟失。');
+      lines.push('登入後自動雲端備份，不會再丟。');
+      if (confirm(lines.join('\n') + '\n\n要現在登入備份嗎？')) handleAuth();
+    } else {
+      alert(lines.join('\n'));
+    }
+  }
+
+  // First time the user hits 7 days while still anonymous, surface a one-shot login modal.
+  function maybePromptAt7() {
+    const s = load();
+    const promptedAlready = localStorage.getItem(PROMPT_KEY);
+    const isLoggedIn = typeof currentUser !== 'undefined' && currentUser;
+    if (s.days >= 7 && !promptedAlready && !isLoggedIn) {
+      localStorage.setItem(PROMPT_KEY, '1');
+      setTimeout(() => {
+        if (confirm(`🔥 你已經連續學習 ${s.days} 天了！\n\n這份紀錄目前只存在這台裝置——清快取或換裝置就會消失。\n\n登入後雲端備份，1 秒搞定。要登入嗎？`)) handleAuth();
+      }, 1500);
+    }
+  }
+
+  return { markToday, render, showInfo, syncDown, maybePromptAt7 };
+})();
+
+// Bootstrap: bump streak on every page load, render the badge, possibly prompt for login.
+markStreakOnLoad();
+function markStreakOnLoad() {
+  Streak.markToday();
+  Streak.render();
+  Streak.maybePromptAt7();
+}
+
+// ========== AFFILIATES ==========
+// Single source of truth for affiliate links + their inline rendering. UTM is stamped per slot
+// so we can later attribute clicks (italki dashboard / GA) to the page that drove them.
+const AFFILIATES = {
+  italki: 'https://www.italki.com/affshare?ref=af32106882',
+};
+function affLink(key, slot) {
+  const sep = AFFILIATES[key].includes('?') ? '&' : '?';
+  return AFFILIATES[key] + sep + 'utm_source=stayjp&utm_medium=' + encodeURIComponent(slot);
+}
+function renderAffiliateBlock(slot) {
+  // Tasteful "recommended resources" card — looks like content, not a banner.
+  return `<section class="aff-block">
+    <div class="aff-title">📚 延伸學習資源</div>
+    <div class="aff-card">
+      <div class="aff-name">italki — 線上 1對1 日文老師</div>
+      <div class="aff-desc">想練口說？italki 有 N3+ 等級認證老師，新用戶首堂課享優惠。</div>
+      <a class="aff-cta" href="${affLink('italki', slot)}" target="_blank" rel="sponsored noopener" onclick="track('affiliate_click', { partner: 'italki', slot: '${slot}' })">找老師練口說 →</a>
+    </div>
+    <div class="aff-disclosure">＊ 透過上方連結註冊，本站可獲少量推薦回饋；對你的價格無影響，感謝支持本站持續更新。</div>
+  </section>`;
+}
 
 // ========== DAILY MODE ==========
 let dailyMode = true;
@@ -1851,6 +2257,7 @@ function renderVocab() {
       <div class="dp"><div class="dp-lbl">${t('total_progress', { lv })}</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(prog.totalOffset/cnt*100)}%"></div></div>
       <div class="dp-txt">${t('progress_txt', { n: prog.totalOffset, total: cnt })}</div></div>
       <button class="daily-btn ${dailyMode?'on':''}" onclick="toggleDailyMode()">${dailyMode?t('show_all'):t('daily_mode')}</button>
+      <button class="shadow-trigger" onclick="Shadow.startCurrent()">🎧 跟讀本頁</button>
       ${dailyMode?`<div class="daily-batch-row">
         ${prog.totalOffset>0?`<button class="daily-btn" onclick="prevDailyBatch()">${t('prev_batch')}</button>`:''}
         ${prog.totalOffset<cnt?`<button class="daily-btn" onclick="nextDailyBatch()">${t('next_batch')}</button>`:''}
@@ -2034,6 +2441,7 @@ function render() {
       <div class="dp"><div class="dp-lbl">${t('total_progress_grammar', { lv })}</div><div class="dp-bar"><div class="dp-fill" style="width:${Math.round(gProg.totalOffset/cnt*100)}%"></div></div>
       <div class="dp-txt">${t('progress_txt', { n: gProg.totalOffset, total: cnt })}</div></div>
       <button class="daily-btn ${grammarDailyMode?'on':''}" onclick="toggleGrammarDailyMode()">${grammarDailyMode?t('show_all'):t('daily_mode')}</button>
+      <button class="shadow-trigger" onclick="Shadow.startCurrent()">🎧 跟讀本頁</button>
       ${grammarDailyMode?`<div class="daily-batch-row">
         ${gProg.totalOffset>0?`<button class="daily-btn" onclick="prevGrammarBatch()">${t('prev_batch')}</button>`:''}
         ${gProg.totalOffset<cnt?`<button class="daily-btn" onclick="nextGrammarBatch()">${t('next_batch')}</button>`:''}
@@ -2068,6 +2476,8 @@ function render() {
   });
 
   if (!vc) h += `<div class="nr"><p>${showFavOnly?t('no_fav_grammar'):t('no_result_grammar')}</p></div>`;
+  // Affiliate block on N3+ grammar pages — most relevant audience for italki conversion.
+  if (vc && /^n[123]$/.test(currentLevel)) h += renderAffiliateBlock('grammar_' + currentLevel);
   mn.innerHTML = h;
   document.getElementById('stats').textContent = `${vc} / ${data.length}`;
   updateFavCount();
@@ -2279,5 +2689,6 @@ function switchBottomTab(btn) {
 <script src="flashcard.js"></script>
 <script src="virtual-list.js"></script>
 <script src="calendar.js"></script>
+<!-- Cloudflare Web Analytics --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;: &quot;0a94a20c2737440a86f55c4241011f68&quot;}"></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

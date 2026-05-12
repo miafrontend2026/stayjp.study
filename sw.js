@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stayjp-v79';
+const CACHE_NAME = 'stayjp-v89';
 const ASSETS = [
   './',
   './index.html',
@@ -25,7 +25,11 @@ const ASSETS = [
   './listening.js',
   './flashcard.js',
   './stayjpplan.png',
-  './manifest.json'
+  './stayjpplan-192.png',
+  './manifest.json',
+  './terms.html',
+  './privacy.html',
+  './refund.html'
 ];
 
 // Install: cache all assets

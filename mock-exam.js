@@ -660,6 +660,9 @@ const MockExam = (() => {
       passed: finalPass,
     });
 
+    // Telemetry: lets us tweet "X users completed N3 mock this week".
+    try { if (typeof gtag === 'function') gtag('event', 'mock_complete', { level: examLevel, score: totalScore, total: totalQuestions, passed: finalPass }); } catch (e) {}
+
     // Find weak areas
     const weakAreas = [];
     sectionResults.forEach(sr => {
@@ -726,6 +729,7 @@ const MockExam = (() => {
 
     // Actions
     html += '<div class="qactions">' +
+      `<button class="qstart" onclick="MockExam.shareCard('${examLevel}',${totalScore},${totalQuestions},${totalPct},${finalPass ? 1 : 0},'${timeStr}')">📸 分享成績卡</button>` +
       `<button class="qstart" onclick="MockExam.beginExam()">${t('me_retry')}</button>` +
       `<button class="qclose" onclick="MockExam.close()">${t('me_back')}</button>` +
     '</div>';
@@ -746,6 +750,95 @@ const MockExam = (() => {
     localStorage.setItem('mock_exam_history', JSON.stringify(h));
   }
 
+  // ── Share card ──
+  // 1080×1080 canvas (Instagram/Threads-friendly square). Renders branded result PNG,
+  // pushes via Web Share API on mobile, falls back to download elsewhere.
+  function shareCard(level, score, total, pct, passedFlag, timeStr) {
+    const passed = !!passedFlag;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080; canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+
+    // Background — 和紙 cream like home.html
+    ctx.fillStyle = '#FAF8F3'; ctx.fillRect(0, 0, 1080, 1080);
+    // 朱印 accent line
+    ctx.fillStyle = '#B8362A'; ctx.fillRect(72, 80, 80, 6);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+
+    // Eyebrow
+    ctx.fillStyle = '#B8362A';
+    ctx.font = '600 28px -apple-system, "Hiragino Sans", "PingFang TC", sans-serif';
+    ctx.fillText('JLPT MOCK · 模擬考結果', 540, 180);
+
+    // Level + meta
+    ctx.fillStyle = '#1C1C1E';
+    ctx.font = 'bold 56px "Hiragino Mincho ProN", "Songti TC", serif';
+    ctx.fillText(level.toUpperCase() + ' 模擬考', 540, 260);
+
+    // Score (huge)
+    ctx.fillStyle = passed ? '#1C7F3F' : '#B8362A';
+    ctx.font = 'bold 200px "Hiragino Mincho ProN", "Songti TC", serif';
+    ctx.fillText(score + ' / ' + total, 540, 540);
+
+    // Percentage
+    ctx.fillStyle = '#1C1C1E';
+    ctx.font = '600 64px -apple-system, "Hiragino Sans", "PingFang TC", sans-serif';
+    ctx.fillText(pct + '%', 540, 630);
+
+    // Pass / fail badge
+    const badgeText = passed ? '✓ 達標' : '✗ 繼續加油';
+    ctx.fillStyle = passed ? '#1C7F3F' : '#B8362A';
+    ctx.font = 'bold 48px -apple-system, "Hiragino Sans", "PingFang TC", sans-serif';
+    ctx.fillText(badgeText, 540, 740);
+
+    // Time
+    ctx.fillStyle = '#6A6A6A';
+    ctx.font = '28px -apple-system, "Hiragino Sans", "PingFang TC", sans-serif';
+    ctx.fillText('用時 ' + timeStr, 540, 800);
+
+    // Divider
+    ctx.fillStyle = '#DDD5C0';
+    ctx.fillRect(360, 870, 360, 1);
+
+    // Brand
+    ctx.fillStyle = '#1C1C1E';
+    ctx.font = 'bold 36px "Hiragino Mincho ProN", "Songti TC", serif';
+    ctx.fillText('再留計劃', 540, 940);
+
+    ctx.fillStyle = '#6A6A6A';
+    ctx.font = '24px -apple-system, "Hiragino Sans", "PingFang TC", sans-serif';
+    ctx.fillText('stayjp.study · 免費 JLPT N5~N1 備考工具', 540, 980);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const filename = `stayjp-${level.toUpperCase()}-${score}-${total}.png`;
+      const file = new File([blob], filename, { type: 'image/png' });
+
+      // Telemetry
+      try { if (typeof gtag === 'function') gtag('event', 'share_card_generated', { level, score, total, passed }); } catch (e) {}
+
+      // Mobile native share if available
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `我在再留計劃 ${level.toUpperCase()} 模擬考`,
+            text: `我在再留計劃 ${level.toUpperCase()} 模擬考拿了 ${score}/${total} ${passed ? '🎉 達標！' : '💪 繼續加油！'} stayjp.study`,
+          });
+          return;
+        } catch (e) { /* user cancelled or share failed — fall through to download */ }
+      }
+      // Desktop / unsupported → download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }, 'image/png');
+  }
+
   // ── Close ──
   function close() {
     clearInterval(timerInterval);
@@ -753,5 +846,5 @@ const MockExam = (() => {
     document.getElementById('quizBg').classList.remove('show');
   }
 
-  return { start, beginExam, startTimer, answer, close };
+  return { start, beginExam, startTimer, answer, close, shareCard };
 })();

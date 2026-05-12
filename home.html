@@ -7,9 +7,12 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2WP4D34LE3"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-2WP4D34LE3');</script>
 <link rel="icon" href="stayjpplan.png?v=3" type="image/png">
-<link rel="apple-touch-icon" href="stayjpplan.png?v=3">
+<link rel="apple-touch-icon" sizes="192x192" href="stayjpplan-192.png?v=1">
+<link rel="apple-touch-icon" sizes="512x512" href="stayjpplan.png?v=3">
 <link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="再留計劃">
 <meta name="theme-color" content="#2C2C2C">
 <meta name="description" content="免費 JLPT N5~N1 線上備考工具。7710+ 單字、382 文法點、模擬考、SRS 間隔複習、聽力讀解練習。不用下載不用註冊，打開瀏覽器就能用。">
@@ -328,7 +331,7 @@ a:hover { text-decoration: underline; }
 /* == Stats · 大字排版無框 == */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 0;
   border-top: 1px solid var(--line);
 }
@@ -603,6 +606,10 @@ a:hover { text-decoration: underline; }
         <div class="stat-number">5</div>
         <div class="stat-label">Levels N5–N1</div>
       </div>
+      <div class="stat-item reveal reveal-d4">
+        <div class="stat-number" id="learnersCount">—</div>
+        <div class="stat-label">Learners 累積學員</div>
+      </div>
     </div>
   </div>
 </section>
@@ -653,6 +660,47 @@ a:hover { text-decoration: underline; }
 </footer>
 
 <script src="i18n.js"></script>
+
+<!-- Firestore-only Firebase for the public learner counter (one ++ per device, ever). -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+(() => {
+  if (typeof firebase === 'undefined') return;
+  if (!firebase.apps.length) firebase.initializeApp({
+    apiKey: 'AIzaSyDnmg2XOuvwgE8m8xCF5sS4o0nQYoUplPI',
+    projectId: 'jpnote-1bdd6',
+  });
+  const db = firebase.firestore();
+  const COUNTED_KEY = 'learner_counted_v1';
+  const ref = db.collection('stats').doc('global');
+  const el = document.getElementById('learnersCount');
+
+  async function bumpIfNew() {
+    if (localStorage.getItem(COUNTED_KEY)) return;
+    try {
+      // Try +1 on existing doc first; if doc doesn't exist yet, seed with 1.
+      await ref.update({ learners: firebase.firestore.FieldValue.increment(1) });
+    } catch (e) {
+      try { await ref.set({ learners: 1 }); } catch (e2) { /* swallow */ }
+    }
+    localStorage.setItem(COUNTED_KEY, '1');
+  }
+
+  async function render() {
+    try {
+      const snap = await ref.get();
+      const n = snap.exists && typeof snap.data().learners === 'number' ? snap.data().learners : 0;
+      if (el) el.textContent = n.toLocaleString() + '+';
+    } catch (e) {
+      if (el) el.textContent = '—';
+    }
+  }
+
+  bumpIfNew().then(render);
+})();
+</script>
+
 <script>
 // ========== I18N (繁/簡切換 via OpenCC runtime 轉換) ==========
 const LANG_KEY = 'ui_lang';
@@ -794,5 +842,6 @@ function openQr(src) {
   els.forEach(el => io.observe(el));
 })();
 </script>
+<!-- Cloudflare Web Analytics --><script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{&quot;token&quot;: &quot;0a94a20c2737440a86f55c4241011f68&quot;}"></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
