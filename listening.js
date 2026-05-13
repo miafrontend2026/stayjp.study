@@ -268,7 +268,24 @@ const Listening = (() => {
   function getScores() { try { return JSON.parse(localStorage.getItem(SCORE_KEY)) || {}; } catch(e) { return {}; } }
   function saveScores(d) { localStorage.setItem(SCORE_KEY, JSON.stringify(d)); }
 
+  let __lsAudio = null;
   function speakText(text, rate) {
+    const t2 = (text || '').trim();
+    if (!t2) return;
+    // 停掉前一輪播放（不論是 VOICEVOX mp3 或瀏覽器 TTS）
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    if (__lsAudio) { try { __lsAudio.pause(); } catch (e) {} __lsAudio = null; }
+    // 優先用 VOICEVOX 預生 mp3
+    const hash = window.__TTS && window.__TTS[t2];
+    if (hash) {
+      __lsAudio = new Audio('audio/tts/' + hash + '.mp3');
+      __lsAudio.playbackRate = rate || 0.85;
+      __lsAudio.play().catch(() => speakBrowser(t2, rate));
+      return;
+    }
+    speakBrowser(t2, rate);
+  }
+  function speakBrowser(text, rate) {
     if (!window.speechSynthesis) { alert(t('ls_no_tts')); return; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);

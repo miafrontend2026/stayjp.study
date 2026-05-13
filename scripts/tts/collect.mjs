@@ -97,6 +97,17 @@ const verbRe = /speak\('([^']+)'\)/g;
 let v;
 while ((v = verbRe.exec(verbsHtml))) add(v[1], 'verbs');
 
+// Listening — every script:"..." inside listening.js item bank.
+// Frontend joins multi-line dialog with 。 before speaking, so we mirror that here.
+const listenSrc = fs.readFileSync(path.join(ROOT, 'listening.js'), 'utf8');
+const scriptRe = /script:"((?:\\.|[^"\\])*)"/g;
+let ls;
+while ((ls = scriptRe.exec(listenSrc))) {
+  // Decode JS string escapes (\\n -> newline, \" -> ", etc.) then join with 。
+  const raw = ls[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+  add(raw.replace(/\n/g, '。'), 'listening');
+}
+
 // ---- write --------------------------------------------------------------
 const out = [...map.entries()]
   .map(([text, sources]) => ({ text, hash: hashText(text), sources: [...sources] }))
