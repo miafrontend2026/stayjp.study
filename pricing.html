@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="再留計劃">
 <meta name="theme-color" content="#2C2C2C">
-<meta name="description" content="再留計劃服務方案與價目表。月費訂閱 NT$160 解鎖全部 JLPT 內容，含模擬考 / 聽力 / 讀解。提供 7 天免費試用。">
+<meta name="description" content="再留計劃服務方案與價目表。年費訂閱 NT$1,200 解鎖全部 JLPT 內容，含模擬考 / 聽力 / 讀解。提供 7 天免費試用。終身方案 NT$3,990 一次付清。">
 <style>
 :root { --bg:#FAF9F6;--bg2:#FFFFFF;--bg3:#F3F1ED;--tx:#2C2C2C;--tx2:#7A7A7A;--tx3:#ACACAC;--ac:#D4654A;--ac2:#4A7FD4;--bd:#E8E5E0;--r:14px;--hh:48px; }
 [data-theme="dark"] { --bg:#1C1C1E;--bg2:#2C2C2E;--bg3:#242426;--tx:#E5E5E5;--tx2:#8E8E93;--tx3:#636366;--ac:#E8734A;--ac2:#6BA8F5;--bd:#3A3A3C; }
@@ -44,6 +44,10 @@ a:hover{text-decoration:underline}
 .plan{background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:24px;display:flex;flex-direction:column}
 .plan.featured{border:2px solid var(--ac);position:relative}
 .plan.featured::before{content:"推薦";position:absolute;top:-12px;right:20px;background:var(--ac);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px}
+.plan.best{border:2px solid #D946EF;position:relative}
+.plan.best::before{content:"🏆 最佳優惠";position:absolute;top:-12px;right:20px;background:#D946EF;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px}
+.save-badge{display:inline-block;background:#EF4444;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;margin-left:6px;vertical-align:middle}
+.trial-badge{display:inline-block;background:rgba(74,127,212,.12);color:var(--ac2);font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;margin-left:6px;vertical-align:middle}
 .plan-name{font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px}
 .plan-tag{font-size:12px;color:var(--tx2);margin-bottom:18px}
 .plan-price{font-size:36px;font-weight:800;color:var(--tx);line-height:1;margin-bottom:4px}
@@ -92,57 +96,59 @@ a:hover{text-decoration:underline}
   <h2>方案與價目表</h2>
   <p class="lead">免費就能用大部分功能；想全面備考再升級。所有付費方案享 7 天免費試用。</p>
 
-  <!-- === 三方案對照 === -->
+  <!-- === 免費方案 callout === -->
+  <div class="box tip" style="margin-bottom:32px;text-align:center">
+    <strong>🎁 想先試試看？</strong>　永久免費方案：N5 全部 + N4 部分內容、基本 SRS、限量聽力。<a href="index.html" style="font-weight:700">立即開始 →</a><br>
+    <span style="font-size:13px;color:var(--tx2)">想全面備考再升級即可，下方付費方案不需信用卡也能先體驗免費內容。</span>
+  </div>
+
+  <!-- === 三付費方案 === -->
   <div class="plans">
 
     <div class="plan">
-      <div class="plan-name">免費方案</div>
-      <div class="plan-tag">入門 / 體驗</div>
-      <div class="plan-price"><span class="currency">NT$</span>0<span class="unit">/ 月</span></div>
-      <div class="plan-cycle">永久免費，不需信用卡</div>
-      <ul class="plan-features">
-        <li>N5 全部單字 + 文法</li>
-        <li>N4 部分內容</li>
-        <li>基本 SRS 間隔複習</li>
-        <li>聽力練習（每等級限量）</li>
-        <li class="disabled">N3 / N2 / N1 全內容</li>
-        <li class="disabled">模擬考</li>
-        <li class="disabled">讀解練習</li>
-        <li class="disabled">雲端同步</li>
-      </ul>
-      <a class="plan-cta" href="index.html">立即開始</a>
-    </div>
-
-    <div class="plan featured">
       <div class="plan-name">月費訂閱</div>
-      <div class="plan-tag">全功能解鎖</div>
-      <div class="plan-price"><span class="currency">NT$</span>160<span class="unit">/ 月</span></div>
+      <div class="plan-tag">彈性短期 / 試用備考</div>
+      <div class="plan-price"><span class="currency">NT$</span>199<span class="unit">/ 月</span></div>
       <div class="plan-cycle">自動續扣 · 隨時可取消</div>
       <ul class="plan-features">
         <li>N5～N1 全部單字 + 文法</li>
         <li>模擬考完整題庫</li>
-        <li>聽力練習無限制</li>
-        <li>讀解練習無限制</li>
+        <li>聽力 / 讀解練習無限制</li>
         <li>SRS 間隔複習</li>
         <li>多裝置雲端同步</li>
         <li>無廣告</li>
-        <li><strong>7 天免費試用</strong></li>
       </ul>
       <a class="plan-cta" href="contact.html">即將開放</a>
     </div>
 
-    <div class="plan">
-      <div class="plan-name">年費訂閱</div>
-      <div class="plan-tag">省 17%</div>
-      <div class="plan-price"><span class="currency">NT$</span>1,600<span class="unit">/ 年</span></div>
-      <div class="plan-cycle">一年付清 · 平均 NT$133/月</div>
+    <div class="plan featured">
+      <div class="plan-name">年費訂閱 <span class="save-badge">省 50%</span></div>
+      <div class="plan-tag">長期備考首選 · <span style="color:var(--ac2);font-weight:700">7 天免費試用</span></div>
+      <div class="plan-price"><span class="currency">NT$</span>1,200<span class="unit">/ 年</span></div>
+      <div class="plan-cycle">平均 NT$100 / 月 · 自動續扣</div>
       <ul class="plan-features">
         <li>月費版全部功能</li>
         <li>一次付清 12 個月</li>
-        <li>適合長期備考</li>
+        <li>每月平均比月費省 NT$99</li>
         <li>多裝置雲端同步</li>
         <li>無廣告</li>
-        <li><strong>7 天免費試用</strong></li>
+        <li><strong>首次訂閱享 7 天免費試用</strong></li>
+      </ul>
+      <a class="plan-cta" href="contact.html">即將開放</a>
+    </div>
+
+    <div class="plan best">
+      <div class="plan-name">終身方案</div>
+      <div class="plan-tag">一次付清 · 不續扣</div>
+      <div class="plan-price"><span class="currency">NT$</span>3,990</div>
+      <div class="plan-cycle">永久使用 · 等於用 33 個月就回本</div>
+      <ul class="plan-features">
+        <li>月費版全部功能</li>
+        <li>永久使用，不再扣款</li>
+        <li>未來新增的功能 / 內容免費更新</li>
+        <li>適合準備跨多年級 JLPT</li>
+        <li>多裝置雲端同步</li>
+        <li>無廣告</li>
       </ul>
       <a class="plan-cta" href="contact.html">即將開放</a>
     </div>
@@ -183,8 +189,8 @@ a:hover{text-decoration:underline}
   <!-- === 訂閱規則 === -->
   <h3>訂閱規則</h3>
   <ul>
-    <li><strong>自動續扣：</strong>訂閱方案為自動續扣制，每個計費週期結束前 24 小時自動扣款下一期。</li>
-    <li><strong>計費週期：</strong>月費 = 30 天為一期；年費 = 365 天為一期。</li>
+    <li><strong>自動續扣：</strong>月費 / 年費為自動續扣制，每個計費週期結束前 24 小時自動扣款下一期；終身方案僅扣款一次，永不續扣。</li>
+    <li><strong>計費週期：</strong>月費 = 30 天為一期；年費 = 365 天為一期；終身方案無到期日。</li>
     <li><strong>付款方式：</strong>透過綠界（ECPay）金流處理，支援 Visa / Master / JCB / 銀聯信用卡、Apple Pay、LINE Pay。</li>
     <li><strong>發票：</strong>每次扣款後 7 個工作天內以 email 寄送電子發票。</li>
   </ul>
@@ -206,7 +212,7 @@ a:hover{text-decoration:underline}
   <h3>退費</h3>
   <p>完整退費規則請見 <a href="refund.html">退費政策</a>。重點：</p>
   <ul>
-    <li>首次訂閱後 7 日內無條件全額退費</li>
+    <li>首次訂閱 / 購買後 7 日內無條件全額退費（含終身方案）</li>
     <li>單筆購買的內容（讀解包 / 模考套餐 / 單等級解鎖）下載 / 解鎖後恕不退費</li>
     <li>系統異常導致無法使用按未使用比例退費</li>
   </ul>
