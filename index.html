@@ -378,8 +378,19 @@ select::-ms-expand { display: none; }
 .intro {
   background: linear-gradient(135deg, var(--bg3) 0%, var(--bg2) 100%);
   border: 1px solid var(--bd);
-  border-radius: 16px; padding: 24px 28px;
+  border-radius: 16px; padding: 24px 130px 24px 28px;
   margin-bottom: 24px; position: relative; overflow: hidden;
+  min-height: 110px;
+}
+.intro::after {
+  content: ''; position: absolute; right: 14px; bottom: -8px;
+  width: 110px; height: 130px;
+  background: url('images/mascot/tanuki-think.png') no-repeat center bottom / contain;
+  opacity: .92; pointer-events: none;
+}
+@media (max-width: 600px) {
+  .intro { padding: 20px 90px 20px 20px; min-height: 90px; }
+  .intro::after { width: 80px; height: 100px; right: 8px; }
 }
 /* Shadowing 跟讀模式 — full-screen overlay with auto-cycle. */
 .shadow-mask { display: flex; align-items: center; justify-content: center; padding: 20px; }
