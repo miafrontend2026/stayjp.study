@@ -269,18 +269,31 @@ const Listening = (() => {
   function saveScores(d) { localStorage.setItem(SCORE_KEY, JSON.stringify(d)); }
 
   let __lsAudio = null;
+  let __lsToken = 0;  // 每次呼叫 speakText 加 1，用來作廢「play() pending 中卻被新呼叫蓋掉」的舊音
+  function stopAudio() {
+    __lsToken++;
+    if (window.speechSynthesis) speechSynthesis.cancel();
+    if (__lsAudio) {
+      try { __lsAudio.pause(); __lsAudio.src = ''; } catch (e) {}
+      __lsAudio = null;
+    }
+  }
   function speakText(text, rate) {
     const t2 = (text || '').trim();
     if (!t2) return;
-    // 停掉前一輪播放（不論是 VOICEVOX mp3 或瀏覽器 TTS）
-    if (window.speechSynthesis) speechSynthesis.cancel();
-    if (__lsAudio) { try { __lsAudio.pause(); } catch (e) {} __lsAudio = null; }
-    // 優先用 VOICEVOX 預生 mp3
+    stopAudio();
+    const myToken = __lsToken;
     const hash = window.__TTS && window.__TTS[t2];
     if (hash) {
-      __lsAudio = new Audio('audio/tts/' + hash + '.mp3');
-      __lsAudio.playbackRate = rate || 0.85;
-      __lsAudio.play().catch(() => speakBrowser(t2, rate));
+      const audio = new Audio('audio/tts/' + hash + '.mp3');
+      audio.playbackRate = rate || 0.85;
+      audio.play().then(() => {
+        // 在 play() Promise resolve 之前若有更新的呼叫進來，這份音檔要作廢
+        if (__lsToken !== myToken) { try { audio.pause(); audio.src=''; } catch(e){} return; }
+        __lsAudio = audio;
+      }).catch(() => {
+        if (__lsToken === myToken) speakBrowser(t2, rate);
+      });
       return;
     }
     speakBrowser(t2, rate);
@@ -341,21 +354,28 @@ const Listening = (() => {
   }
 
   let lastCountVal = '5';
+  let lastBatchIds = [];  // 上一輪用過的題目 id，下一輪優先排除
   function begin() {
     // 從起始面板讀設定；若從結果頁呼叫則面板不存在，沿用上次（防止按鈕無反應）
     const lvEl = document.querySelector('#lsLevel .on');
     const ctEl = document.querySelector('#lsCount .on');
     const mdEl = document.querySelector('#lsMode .on');
-    if (lvEl) selectedLevel = lvEl.dataset.v;
+    if (lvEl) { if (selectedLevel !== lvEl.dataset.v) lastBatchIds = []; selectedLevel = lvEl.dataset.v; }
     if (ctEl) lastCountVal = ctEl.dataset.v;
     if (mdEl) practiceMode = mdEl.dataset.v === 'practice';
 
     const pool = items.filter(i => i.level === selectedLevel);
     if (!pool.length) { alert(t('ls_no_data')); return; }
 
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-    const count = lastCountVal === 'all' ? shuffled.length : Math.min(parseInt(lastCountVal), shuffled.length);
-    queue = shuffled.slice(0, count);
+    const wantCount = lastCountVal === 'all' ? pool.length : Math.min(parseInt(lastCountVal), pool.length);
+    // 先排除上一輪的；若剩下不夠才從上一輪挑補滿（avoid 連續兩輪完全一樣）
+    const unseen = pool.filter(i => !lastBatchIds.includes(i.id));
+    const seen = pool.filter(i => lastBatchIds.includes(i.id));
+    const shuffledUnseen = [...unseen].sort(() => Math.random() - 0.5);
+    const shuffledSeen = [...seen].sort(() => Math.random() - 0.5);
+    queue = [...shuffledUnseen, ...shuffledSeen].slice(0, wantCount);
+    lastBatchIds = queue.map(q => q.id);
+
     score = 0;
     total = queue.length;
     answered = [];
@@ -482,8 +502,8 @@ const Listening = (() => {
       navDiv.innerHTML = `<button class="qstart" onclick="Listening.showResults()">${t('rd_show_result')}</button>`;
     }
 
-    // Stop synthesis
-    if (window.speechSynthesis) speechSynthesis.cancel();
+    // 答完該題就停掉還在播的音檔
+    stopAudio();
   }
 
   function showResults() {
@@ -513,7 +533,7 @@ const Listening = (() => {
   }
 
   function close() {
-    if (window.speechSynthesis) speechSynthesis.cancel();
+    stopAudio();
     document.getElementById('quizBg').classList.remove('show');
   }
 
