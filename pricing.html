@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>價目表 — 再留計劃</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2WP4D34LE3"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-2WP4D34LE3');</script>
+<link rel="icon" href="stayjpplan.png?v=3" type="image/png">
+<link rel="apple-touch-icon" sizes="192x192" href="stayjpplan-192.png?v=1">
+<link rel="apple-touch-icon" sizes="512x512" href="stayjpplan.png?v=3">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="再留計劃">
+<meta name="theme-color" content="#2C2C2C">
+<meta name="description" content="再留計劃服務方案與價目表。月費訂閱 NT$160 解鎖全部 JLPT 內容，含模擬考 / 聽力 / 讀解。提供 7 天免費試用。">
+<style>
+:root { --bg:#FAF9F6;--bg2:#FFFFFF;--bg3:#F3F1ED;--tx:#2C2C2C;--tx2:#7A7A7A;--tx3:#ACACAC;--ac:#D4654A;--ac2:#4A7FD4;--bd:#E8E5E0;--r:14px;--hh:48px; }
+[data-theme="dark"] { --bg:#1C1C1E;--bg2:#2C2C2E;--bg3:#242426;--tx:#E5E5E5;--tx2:#8E8E93;--tx3:#636366;--ac:#E8734A;--ac2:#6BA8F5;--bd:#3A3A3C; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","PingFang TC",system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.7;font-size:15px;-webkit-font-smoothing:antialiased}
+a{color:var(--ac2);text-decoration:none}
+a:hover{text-decoration:underline}
+.hd{position:fixed;top:0;left:0;right:0;background:var(--bg);z-index:100;border-bottom:1px solid var(--bd);backdrop-filter:saturate(180%) blur(12px)}
+.hd-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;padding:0 20px;height:var(--hh);gap:12px}
+.hd h1{font-size:16px;font-weight:700}
+.hd-links{display:flex;gap:8px;margin-left:auto;align-items:center;font-size:13px}
+.hd-links a{color:var(--tx2);padding:5px 10px;border-radius:8px;background:var(--bg3)}
+.hd-links a:hover{color:var(--ac);text-decoration:none}
+.main{max-width:960px;margin:0 auto;padding:calc(var(--hh) + 48px) 20px 80px}
+.main h2{font-size:32px;font-weight:800;margin-bottom:8px;letter-spacing:-.3px;text-align:center}
+.main .lead{color:var(--tx2);font-size:15px;margin-bottom:48px;text-align:center}
+.main h3{font-size:20px;font-weight:700;margin:48px 0 16px;border-left:4px solid var(--ac);padding-left:12px}
+.main p{margin-bottom:12px}
+.main ul{padding-left:20px;margin-bottom:14px}
+.main li{margin-bottom:6px}
+.main strong{color:var(--tx);font-weight:700}
+
+/* Plan cards */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:32px 0}
+@media (max-width:760px){.plans{grid-template-columns:1fr}}
+.plan{background:var(--bg2);border:1px solid var(--bd);border-radius:16px;padding:24px;display:flex;flex-direction:column}
+.plan.featured{border:2px solid var(--ac);position:relative}
+.plan.featured::before{content:"推薦";position:absolute;top:-12px;right:20px;background:var(--ac);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px}
+.plan-name{font-size:18px;font-weight:700;color:var(--tx);margin-bottom:4px}
+.plan-tag{font-size:12px;color:var(--tx2);margin-bottom:18px}
+.plan-price{font-size:36px;font-weight:800;color:var(--tx);line-height:1;margin-bottom:4px}
+.plan-price .unit{font-size:14px;font-weight:600;color:var(--tx2);margin-left:4px}
+.plan-price .currency{font-size:18px;color:var(--tx2);margin-right:2px}
+.plan-cycle{font-size:12px;color:var(--tx2);margin-bottom:20px}
+.plan-features{list-style:none;padding:0;margin:0 0 22px;flex:1}
+.plan-features li{font-size:13px;color:var(--tx);margin-bottom:8px;padding-left:22px;position:relative}
+.plan-features li::before{content:"✓";position:absolute;left:0;color:var(--ac);font-weight:700}
+.plan-features li.disabled{color:var(--tx3);text-decoration:line-through}
+.plan-features li.disabled::before{content:"—";color:var(--tx3)}
+.plan-cta{display:block;text-align:center;padding:12px;background:var(--bg3);color:var(--tx);border-radius:10px;font-weight:600;font-size:14px;border:1px solid var(--bd)}
+.plan.featured .plan-cta{background:var(--ac);color:#fff;border-color:var(--ac)}
+
+/* Addon table */
+.addons{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin:24px 0}
+.addons table{width:100%;border-collapse:collapse}
+.addons th,.addons td{padding:14px 18px;text-align:left;border-bottom:1px solid var(--bd);font-size:14px}
+.addons th{background:var(--bg3);font-weight:700;font-size:13px;color:var(--tx2)}
+.addons tr:last-child td{border-bottom:none}
+.addons .price{font-weight:700;color:var(--ac);white-space:nowrap}
+
+/* Info boxes */
+.box{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:18px 22px;margin:18px 0;font-size:14px;color:var(--tx2)}
+.box strong{color:var(--tx)}
+.box.tip{border-color:rgba(74,127,212,.3);background:rgba(74,127,212,.05)}
+.box.warn{border-color:rgba(212,101,74,.3);background:rgba(212,101,74,.05)}
+
+.ft{padding:40px 20px;text-align:center;color:var(--tx3);font-size:12px;border-top:1px solid var(--bd);background:var(--bg);line-height:1.9}
+.ft a{color:var(--ac2)}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <div class="hd-inner">
+    <h1><a href="home.html" style="color:inherit;text-decoration:none">再留計劃</a></h1>
+    <nav class="hd-links">
+      <a href="index.html">學習</a>
+      <a href="contact.html">聯絡</a>
+    </nav>
+  </div>
+</header>
+
+<main class="main">
+  <h2>方案與價目表</h2>
+  <p class="lead">免費就能用大部分功能；想全面備考再升級。所有付費方案享 7 天免費試用。</p>
+
+  <!-- === 三方案對照 === -->
+  <div class="plans">
+
+    <div class="plan">
+      <div class="plan-name">免費方案</div>
+      <div class="plan-tag">入門 / 體驗</div>
+      <div class="plan-price"><span class="currency">NT$</span>0<span class="unit">/ 月</span></div>
+      <div class="plan-cycle">永久免費，不需信用卡</div>
+      <ul class="plan-features">
+        <li>N5 全部單字 + 文法</li>
+        <li>N4 部分內容</li>
+        <li>基本 SRS 間隔複習</li>
+        <li>聽力練習（每等級限量）</li>
+        <li class="disabled">N3 / N2 / N1 全內容</li>
+        <li class="disabled">模擬考</li>
+        <li class="disabled">讀解練習</li>
+        <li class="disabled">雲端同步</li>
+      </ul>
+      <a class="plan-cta" href="index.html">立即開始</a>
+    </div>
+
+    <div class="plan featured">
+      <div class="plan-name">月費訂閱</div>
+      <div class="plan-tag">全功能解鎖</div>
+      <div class="plan-price"><span class="currency">NT$</span>160<span class="unit">/ 月</span></div>
+      <div class="plan-cycle">自動續扣 · 隨時可取消</div>
+      <ul class="plan-features">
+        <li>N5～N1 全部單字 + 文法</li>
+        <li>模擬考完整題庫</li>
+        <li>聽力練習無限制</li>
+        <li>讀解練習無限制</li>
+        <li>SRS 間隔複習</li>
+        <li>多裝置雲端同步</li>
+        <li>無廣告</li>
+        <li><strong>7 天免費試用</strong></li>
+      </ul>
+      <a class="plan-cta" href="contact.html">即將開放</a>
+    </div>
+
+    <div class="plan">
+      <div class="plan-name">年費訂閱</div>
+      <div class="plan-tag">省 17%</div>
+      <div class="plan-price"><span class="currency">NT$</span>1,600<span class="unit">/ 年</span></div>
+      <div class="plan-cycle">一年付清 · 平均 NT$133/月</div>
+      <ul class="plan-features">
+        <li>月費版全部功能</li>
+        <li>一次付清 12 個月</li>
+        <li>適合長期備考</li>
+        <li>多裝置雲端同步</li>
+        <li>無廣告</li>
+        <li><strong>7 天免費試用</strong></li>
+      </ul>
+      <a class="plan-cta" href="contact.html">即將開放</a>
+    </div>
+
+  </div>
+
+  <!-- === 單筆加購 === -->
+  <h3>單筆購買（不訂閱）</h3>
+  <p>不想訂閱、只想針對特定弱項加強，可以單筆購買以下內容：</p>
+
+  <div class="addons">
+    <table>
+      <thead>
+        <tr><th>商品</th><th>內容</th><th style="text-align:right">價格</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>讀解練習包</strong></td>
+          <td>JLPT 全等級讀解題 + 全文翻譯 + 解析</td>
+          <td class="price" style="text-align:right">NT$ 99</td>
+        </tr>
+        <tr>
+          <td><strong>模擬考套餐</strong></td>
+          <td>5 套完整模擬考（含文字語彙 + 文法讀解 + 聽力）</td>
+          <td class="price" style="text-align:right">NT$ 320</td>
+        </tr>
+        <tr>
+          <td><strong>單等級全解鎖</strong></td>
+          <td>單一等級（如 N3）全部內容永久使用</td>
+          <td class="price" style="text-align:right">NT$ 480</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:13px;color:var(--tx2)">所有價格為新台幣 (TWD)，含營業稅。境外用戶結帳時依當下匯率以信用卡發卡幣別扣款。</p>
+
+  <!-- === 訂閱規則 === -->
+  <h3>訂閱規則</h3>
+  <ul>
+    <li><strong>自動續扣：</strong>訂閱方案為自動續扣制，每個計費週期結束前 24 小時自動扣款下一期。</li>
+    <li><strong>計費週期：</strong>月費 = 30 天為一期；年費 = 365 天為一期。</li>
+    <li><strong>付款方式：</strong>透過綠界（ECPay）金流處理，支援 Visa / Master / JCB / 銀聯信用卡、Apple Pay、LINE Pay。</li>
+    <li><strong>發票：</strong>每次扣款後 7 個工作天內以 email 寄送電子發票。</li>
+  </ul>
+
+  <h3>7 天免費試用</h3>
+  <div class="box tip">
+    <strong>📌 試用方式</strong><br>
+    首次訂閱時系統會請你綁定信用卡，但<strong>頭 7 天完全免費</strong>，期間享有全功能。第 8 天才開始扣款。試用期內隨時可取消，不會產生任何費用。
+  </div>
+
+  <h3>取消訂閱</h3>
+  <p>有兩種方式可隨時取消：</p>
+  <ol>
+    <li><strong>站內取消：</strong>登入後點右上角頭像 → 訂閱管理 → 取消訂閱</li>
+    <li><strong>客服取消：</strong>來信 <a href="contact.html">contact.html</a>，主旨註明「取消訂閱」+ 你的訂閱 email，1 個工作天內處理</li>
+  </ol>
+  <p>取消後當期已扣款的服務期間仍可正常使用至到期日，到期後不再續扣。</p>
+
+  <h3>退費</h3>
+  <p>完整退費規則請見 <a href="refund.html">退費政策</a>。重點：</p>
+  <ul>
+    <li>首次訂閱後 7 日內無條件全額退費</li>
+    <li>單筆購買的內容（讀解包 / 模考套餐 / 單等級解鎖）下載 / 解鎖後恕不退費</li>
+    <li>系統異常導致無法使用按未使用比例退費</li>
+  </ul>
+
+  <div class="box warn" style="margin-top:48px">
+    <strong>⚠️ 試營運說明</strong><br>
+    本服務目前處於試營運階段，金流整合審核中。付費方案預計於 2026 年第三季正式開放。
+    免費內容現已可使用：<a href="index.html">開始學習 →</a>
+  </div>
+
+</main>
+
+<footer class="ft">
+  再留計劃 (Stay JP) &mdash;
+  <a href="home.html">回首頁</a> ·
+  <a href="index.html">學習工具</a> ·
+  <a href="contact.html">聯絡客服</a> ·
+  <a href="terms.html">服務條款</a> ·
+  <a href="privacy.html">隱私權</a> ·
+  <a href="refund.html">退費政策</a>
+  <div style="margin-top:6px;font-size:11px;color:var(--tx3)">stayjp.study</div>
+</footer>
+
+</body>
+</html>
