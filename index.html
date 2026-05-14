@@ -1744,8 +1744,10 @@ const Shadow = (() => {
   function replay() { clearTimer(); stage = 0; step(); }
   function togglePause() {
     paused = !paused;
-    if (paused) { clearTimer(); setStatus('⏸ 暫停'); }
-    else step();
+    if (paused) { clearTimer(); setStatus('⏸ 暫停'); return; }
+    // 恢復播放：一律從當前句子的播放階段（stage 0）重來，避免卡在跟讀停頓 / 間隔等中間狀態
+    stage = 0;
+    step();
   }
   function exit(reachedEnd) {
     clearTimer();
@@ -1773,7 +1775,15 @@ const Shadow = (() => {
     document.querySelectorAll('.vi').forEach(vi => {
       const text = vi.dataset.r || vi.dataset.w;
       const w = vi.dataset.w || '';
-      if (text) out.push({ j: text, z: w !== text ? w : '' });
+      // 從 DOM 抓中譯（cvt 已經套用過繁/簡）
+      const m = (vi.querySelector('.vm')?.textContent || '').trim();
+      if (!text) return;
+      // z 行：漢字 · 中譯（兩者都有則用 · 分隔；只有漢字或只有中譯都正常顯示）
+      let z = '';
+      if (w && w !== text && m) z = w + ' · ' + m;
+      else if (w && w !== text) z = w;
+      else if (m) z = m;
+      out.push({ j: text, z });
     });
     return out;
   }
