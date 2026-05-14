@@ -206,8 +206,22 @@ a:hover { text-decoration: underline; }
   letter-spacing: .15em; text-transform: uppercase;
 }
 
-/* 右下角的和式裝飾（僅桌機顯示） */
+/* 吉祥物：右側站姿，桌機顯示在 hero 文字旁 */
+.hero { display: flex; align-items: center; gap: 60px; }
+.hero-inner { flex: 1; }
+.hero-mascot {
+  flex-shrink: 0; width: clamp(280px, 32vw, 460px);
+  position: relative; z-index: 1;
+}
+.hero-mascot img { width: 100%; height: auto; display: block; filter: drop-shadow(0 12px 32px rgba(0,0,0,.08)); }
+@media (max-width: 900px) {
+  .hero { flex-direction: column; gap: 0; padding-top: calc(var(--hh) + 32px); }
+  .hero-mascot { width: 60vw; max-width: 280px; margin: 0 auto 12px; order: -1; }
+}
+
+/* 舊的和式漢字裝飾保留但不再使用 */
 .hero-deco {
+  display: none;
   position: absolute; right: 5%; bottom: 12%;
   font-family: var(--serif); font-size: 160px;
   color: var(--ac-soft); font-weight: 400;
@@ -262,6 +276,32 @@ a:hover { text-decoration: underline; }
   max-width: 720px;
 }
 .section-title em { font-style: normal; color: var(--ac); }
+
+/* == Pricing teaser == */
+.pricing-teaser { position: relative; }
+.pt-mascot { position: absolute; top: 24px; right: 5%; width: clamp(80px, 10vw, 140px); opacity: .85; pointer-events: none; }
+.pt-mascot img { width: 100%; height: auto; }
+@media (max-width: 760px) { .pt-mascot { display: none; } }
+.pt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 32px; }
+@media (max-width: 760px) { .pt-grid { grid-template-columns: 1fr; } }
+.pt-card {
+  background: var(--bg2, #FFF); border: 1px solid var(--line);
+  border-radius: 16px; padding: 28px 24px; position: relative;
+  transition: transform .2s var(--ease), border-color .2s var(--ease);
+}
+.pt-card:hover { transform: translateY(-2px); border-color: var(--ac); }
+.pt-featured { border: 2px solid var(--ac); }
+.pt-badge {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--ac); color: #fff; font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 999px; white-space: nowrap;
+}
+.pt-badge-best { background: #D946EF; }
+.pt-name { font-size: 16px; font-weight: 700; color: var(--tx); margin-bottom: 12px; }
+.pt-price { font-size: 36px; font-weight: 800; color: var(--tx); line-height: 1; letter-spacing: -.02em; margin-bottom: 8px; }
+.pt-price span { font-size: 16px; font-weight: 600; color: var(--tx2); margin-right: 2px; vertical-align: top; }
+.pt-price small { font-size: 13px; font-weight: 600; color: var(--tx2); margin-left: 4px; }
+.pt-desc { font-size: 13px; color: var(--tx2); }
 
 /* == Features · 編號式，不用 icon 塗色 == */
 .features {
@@ -513,16 +553,18 @@ a:hover { text-decoration: underline; }
   <div class="hero-inner">
     <div class="hero-eyebrow reveal">STAYJP · STUDY</div>
     <h2 class="hero-kana reveal reveal-d1">日々是学習。</h2>
-    <h1 class="hero-title reveal reveal-d2">每天五分鐘，<br>JLPT <em>不再怕</em>。</h1>
-    <p class="hero-desc reveal reveal-d3"><strong>7,710 個單字・382 個文法・模擬考・SRS 間隔複習。</strong><br>免費、免註冊、打開就能用。</p>
+    <h1 class="hero-title reveal reveal-d2">N5 到 N1，<br><em>陪你考過每一關。</em></h1>
+    <p class="hero-desc reveal reveal-d3"><strong>7,710 個單字・382 個文法・模擬考・SRS 間隔複習。</strong><br>免費就能用大部分功能，全面備考再升級。</p>
     <div class="hero-cta-row reveal reveal-d4">
-      <a href="index.html" class="hero-cta">開始學習
+      <a href="index.html" class="hero-cta">免費開始
         <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
-      <span class="hero-sub">No sign-up</span>
+      <a href="pricing.html" class="hero-cta" style="background:transparent;color:var(--tx);border:1.5px solid var(--bd)">看付費方案</a>
     </div>
   </div>
-  <div class="hero-deco" aria-hidden="true">学</div>
+  <div class="hero-mascot reveal reveal-d2">
+    <img src="images/mascot/tanuki-stand.png" alt="再留計劃吉祥物 — 學者狸太郎" loading="eager">
+  </div>
 </section>
 
 <!-- Marquee -->
@@ -570,15 +612,53 @@ a:hover { text-decoration: underline; }
   </div>
 </section>
 
+<!-- Pricing teaser -->
+<section class="section pricing-teaser">
+  <div class="section-inner">
+    <div class="eyebrow reveal">PRICING · 方案</div>
+    <h2 class="section-title reveal">免費就夠用，<em>想全面備考再升級</em>。</h2>
+    <div class="pt-mascot reveal" aria-hidden="true"><img src="images/mascot/tanuki-cheer.png" alt=""></div>
+    <div class="pt-grid">
+      <div class="pt-card reveal">
+        <div class="pt-name">月費訂閱</div>
+        <div class="pt-price"><span>NT$</span>199<small>/ 月</small></div>
+        <div class="pt-desc">彈性短期 · 隨時取消</div>
+      </div>
+      <div class="pt-card pt-featured reveal reveal-d1">
+        <div class="pt-badge">省 50% · 推薦</div>
+        <div class="pt-name">年費訂閱</div>
+        <div class="pt-price"><span>NT$</span>1,200<small>/ 年</small></div>
+        <div class="pt-desc">平均 NT$100 / 月 · 7 天免費試用</div>
+      </div>
+      <div class="pt-card reveal reveal-d2">
+        <div class="pt-badge pt-badge-best">🏆 最佳優惠</div>
+        <div class="pt-name">終身方案</div>
+        <div class="pt-price"><span>NT$</span>3,990</div>
+        <div class="pt-desc">一次付清 · 永久使用</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:32px">
+      <a href="pricing.html" class="hero-cta" style="background:var(--tx);color:var(--bg)">查看完整方案
+        <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- Story -->
 <section class="section story">
   <div class="section-inner">
-    <div class="story-wrap">
-      <div class="story-label reveal">ABOUT · 設計理念</div>
-      <div class="story-text reveal reveal-d1">
-        <p>單字、文法、模擬考、SRS 間隔複習整合在同一站，免註冊、免付費、資料存放本地裝置。</p>
-        <p>介面以 <strong>每日固定份量</strong> 為核心：每天 20 個單字、10 個文法點，搭配間隔複習與計時模考，避免一次塞太多而放棄。</p>
-        <p>若工具對你有幫助，歡迎分享給其他 JLPT 備考者。</p>
+    <div class="story-wrap" style="display:flex;align-items:center;gap:48px;flex-wrap:wrap">
+      <div class="story-mascot reveal" aria-hidden="true" style="flex-shrink:0">
+        <img src="images/mascot/tanuki-think.png" alt="" style="width:clamp(160px,20vw,240px);height:auto">
+      </div>
+      <div style="flex:1;min-width:280px">
+        <div class="story-label reveal">ABOUT · 設計理念</div>
+        <div class="story-text reveal reveal-d1">
+          <p>單字、文法、模擬考、SRS 間隔複習整合在同一站，免註冊也能用大部分功能，學習進度存放本地裝置。</p>
+          <p>介面以 <strong>每日固定份量</strong> 為核心：每天 20 個單字、10 個文法點，搭配間隔複習與計時模考，避免一次塞太多而放棄。</p>
+          <p>若工具對你有幫助，歡迎分享給其他 JLPT 備考者。</p>
+        </div>
       </div>
     </div>
   </div>
