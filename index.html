@@ -399,6 +399,17 @@ select::-ms-expand { display: none; }
 .shadow-hint { font-size: 11px; color: var(--tx3); letter-spacing: .03em; }
 .shadow-trigger { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--ac); border-radius: 999px; background: rgba(212,101,74,.06); color: var(--ac); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .shadow-trigger:hover { background: var(--ac); color: #fff; }
+
+/* === 弱項標記 + 小考 === */
+.gm-marks { display: flex; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--bd); }
+.gm-btn { flex: 1; padding: 7px 12px; border: 1px solid var(--bd); border-radius: 8px; background: var(--bg2); color: var(--tx2); font-size: 13px; cursor: pointer; transition: all .15s; font-weight: 500; }
+.gm-btn:hover { background: var(--bg3); }
+.gm-btn.weak.on { background: rgba(239,68,68,.1); border-color: #EF4444; color: #EF4444; font-weight: 700; }
+.gm-btn.known:hover { border-color: #10B981; color: #10B981; }
+.weak-launcher { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #EF4444; border-radius: 999px; background: rgba(239,68,68,.06); color: #EF4444; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.weak-launcher:hover { background: #EF4444; color: #fff; }
+.wg-opt { padding: 12px 14px; border: 1px solid var(--bd); background: var(--bg2); color: var(--tx); border-radius: 8px; cursor: pointer; text-align: left; font-size: 14px; transition: all .15s; }
+.wg-opt:hover:not(:disabled) { background: var(--bg3); border-color: var(--ac2); }
 /* Streak badge in header. Hidden by default, shown by JS once a streak exists. */
 .streak-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border: 1px solid var(--bd); border-radius: 999px; background: var(--bg2); color: var(--tx); font-size: 13px; font-weight: 600; cursor: pointer; line-height: 1; white-space: nowrap; transition: background .15s, border-color .15s; }
 .streak-btn:hover { background: var(--bg3); }
@@ -1446,7 +1457,7 @@ function saveSRSCloud() {
   db.collection('users').doc(currentUser.uid).set({ srs_data: d }, { merge: true });
 }
 // ── Sync ALL data ──
-const SYNC_KEYS = ['study_log','word_notebook','grammar_srs','daily_progress','mock_exam_history','exam_date','base_level','goal_level','reading_done'];
+const SYNC_KEYS = ['study_log','word_notebook','grammar_srs','grammar_weak','daily_progress','mock_exam_history','exam_date','base_level','goal_level','reading_done'];
 function saveAllCloud() {
   if (!currentUser || !db) return;
   const payload = {};
@@ -1773,6 +1784,134 @@ const Shadow = (() => {
   }
 
   return { startCurrent, start };
+})();
+
+// ========== WEAK GRAMMAR (不熟標記 + 小考) ==========
+const WeakGrammar = (() => {
+  const KEY = 'grammar_weak';  // { [id]: timestamp }
+
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function save(d) {
+    localStorage.setItem(KEY, JSON.stringify(d));
+    if (typeof saveAllCloud === 'function') saveAllCloud();
+  }
+  function isWeak(id) { return !!load()[id]; }
+  function count() { return Object.keys(load()).length; }
+  function toggleWeak(id) {
+    const d = load();
+    if (d[id]) delete d[id]; else d[id] = Date.now();
+    save(d); updateBadge(); return !!d[id];
+  }
+  function markKnown(id) {
+    const d = load();
+    if (d[id]) { delete d[id]; save(d); updateBadge(); }
+  }
+  function updateBadge() {
+    const n = count();
+    document.querySelectorAll('.weak-launcher').forEach(b => {
+      b.textContent = '📝 不熟複習 (' + n + ')';
+      b.style.display = n > 0 ? '' : 'none';
+    });
+    // 同步更新所有「不熟」按鈕的 on 狀態
+    document.querySelectorAll('.gm-btn.weak').forEach(b => {
+      const id = b.dataset.gid;
+      if (id) b.classList.toggle('on', isWeak(id));
+    });
+  }
+
+  // === 小考 ===
+  let q = null;
+  function startQuiz() {
+    const weakIds = Object.keys(load());
+    if (!weakIds.length) { alert('還沒標記任何不熟的文法。打開文法卡片，點「✗ 不熟」加入清單。'); return; }
+    const all = [];
+    ['n5','n4','n3','n2','n1'].forEach(lv => {
+      const { data } = getGrammarData(lv);
+      data.forEach(g => all.push(Object.assign({}, g, { level: lv })));
+    });
+    const items = all.filter(g => weakIds.includes(g.id) && g.eg && g.eg.length);
+    if (!items.length) { alert('找不到對應文法'); return; }
+    const picks = [...items].sort(() => Math.random() - 0.5).slice(0, Math.min(5, items.length));
+    q = { items: picks, pool: all, idx: 0, score: 0 };
+    renderQ();
+  }
+  function renderQ() {
+    if (!q) return;
+    if (q.idx >= q.items.length) return renderResults();
+    const it = q.items[q.idx];
+    const eg = it.eg[Math.floor(Math.random() * it.eg.length)];
+    const sameLv = q.pool.filter(g => g.level === it.level && g.id !== it.id);
+    const wPool = sameLv.length >= 3 ? sameLv : q.pool.filter(g => g.id !== it.id);
+    const wrongs = [...wPool].sort(() => Math.random() - 0.5).slice(0, 3);
+    const opts = [it].concat(wrongs).sort(() => Math.random() - 0.5);
+    const correctIdx = opts.findIndex(o => o.id === it.id);
+    closeQuiz();
+    const mask = document.createElement('div');
+    mask.id = 'wgQuiz'; mask.className = 'cc-mask';
+    mask.innerHTML = '<div class="cc-box" style="width:min(480px,calc(100vw - 32px))">' +
+      '<div class="cc-title">📝 不熟複習 — ' + (q.idx + 1) + ' / ' + q.items.length + '</div>' +
+      '<div style="background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px">' +
+        '<div style="font-size:11px;color:var(--tx2);margin-bottom:6px">' + it.level.toUpperCase() + ' · 看這個例句，選對應的文法</div>' +
+        '<div style="font-size:16px;color:var(--tx);line-height:1.6;margin-bottom:6px">' + eg.j.replace(/<em>/g,'<span style="color:var(--ac);font-weight:700">').replace(/<\/em>/g,'</span>') + '</div>' +
+        '<div style="font-size:13px;color:var(--tx2)">' + cvt(eg.z) + '</div>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        opts.map((o, i) => '<button class="wg-opt" data-i="' + i + '"><strong>' + o.t + '</strong><span style="color:var(--tx2);font-size:12px;margin-left:8px">' + o.p + '</span></button>').join('') +
+      '</div>' +
+      '<div id="wgFb" style="margin-top:12px;min-height:20px;font-size:13px"></div>' +
+      '<div id="wgNav" style="margin-top:12px;display:flex;gap:8px">' +
+        '<button class="cc-btn" data-act="close" style="flex:1">中斷</button>' +
+      '</div>' +
+    '</div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(() => mask.classList.add('on'));
+    mask.addEventListener('click', e => {
+      const btn = e.target.closest('.wg-opt');
+      if (btn) return handleAns(parseInt(btn.dataset.i), correctIdx, opts, it);
+      if (e.target.dataset.act === 'close') closeQuiz();
+      else if (e.target.dataset.act === 'next') { q.idx++; renderQ(); }
+    });
+  }
+  function handleAns(picked, correctIdx, opts, it) {
+    document.querySelectorAll('#wgQuiz .wg-opt').forEach((b, i) => {
+      b.disabled = true; b.style.cursor = 'default';
+      if (i === correctIdx) { b.style.background = '#10B98122'; b.style.borderColor = '#10B981'; }
+      else if (i === picked) { b.style.background = '#EF444422'; b.style.borderColor = '#EF4444'; }
+    });
+    const fb = document.getElementById('wgFb');
+    if (picked === correctIdx) {
+      q.score++;
+      fb.innerHTML = '<span style="color:#10B981">✓ 答對！</span> <button onclick="WeakGrammar.markKnown(\'' + it.id + '\');this.outerHTML=\'<span style=color:var(--tx2)>✓ 已從不熟清單移除</span>\'" style="margin-left:8px;padding:3px 10px;font-size:12px;border:1px solid var(--ac);background:none;color:var(--ac);border-radius:6px;cursor:pointer">標為已會</button>';
+    } else {
+      fb.innerHTML = '<span style="color:#EF4444">✗ 正確答案：' + opts[correctIdx].t + '</span>';
+    }
+    document.getElementById('wgNav').innerHTML = '<button class="cc-btn primary" data-act="next" style="flex:1">' + (q.idx + 1 >= q.items.length ? '看結果' : '下一題 →') + '</button>';
+  }
+  function renderResults() {
+    const pct = Math.round(q.score / q.items.length * 100);
+    closeQuiz();
+    const mask = document.createElement('div');
+    mask.id = 'wgQuiz'; mask.className = 'cc-mask';
+    mask.innerHTML = '<div class="cc-box" style="text-align:center">' +
+      '<div class="cc-title">' + (pct >= 80 ? '🎉 表現不錯！' : pct >= 50 ? '👍 還可以' : '💪 繼續加油') + '</div>' +
+      '<div style="font-size:36px;font-weight:700;color:var(--ac);margin:12px 0">' + q.score + ' / ' + q.items.length + '</div>' +
+      '<div style="font-size:14px;color:var(--tx2);margin-bottom:14px">' + pct + '% 答對率</div>' +
+      '<div class="cc-btns"><button class="cc-btn" data-act="close" style="flex:1">關閉</button>' +
+      '<button class="cc-btn primary" data-act="restart" style="flex:1">再來一輪</button></div>' +
+    '</div>';
+    document.body.appendChild(mask);
+    requestAnimationFrame(() => mask.classList.add('on'));
+    mask.addEventListener('click', e => {
+      if (e.target.dataset.act === 'close') closeQuiz();
+      else if (e.target.dataset.act === 'restart') { closeQuiz(); startQuiz(); }
+    });
+  }
+  function closeQuiz() {
+    const old = document.getElementById('wgQuiz');
+    if (old) { old.classList.remove('on'); setTimeout(() => old.remove(), 200); }
+  }
+
+  return { isWeak, count, toggleWeak, markKnown, startQuiz, updateBadge };
 })();
 
 // ========== ANALYTICS ==========
@@ -2450,6 +2589,7 @@ function render() {
       <div class="dp-txt">${t('progress_txt', { n: gProg.totalOffset, total: cnt })}</div></div>
       <button class="daily-btn ${grammarDailyMode?'on':''}" onclick="toggleGrammarDailyMode()">${grammarDailyMode?t('show_all'):t('daily_mode')}</button>
       <button class="shadow-trigger" onclick="Shadow.startCurrent()">🎧 跟讀本頁</button>
+      <button class="weak-launcher" onclick="WeakGrammar.startQuiz()" style="display:${WeakGrammar.count()>0?'':'none'}">📝 不熟複習 (${WeakGrammar.count()})</button>
       ${grammarDailyMode?`<div class="daily-batch-row">
         ${gProg.totalOffset>0?`<button class="daily-btn" onclick="prevGrammarBatch()">${t('prev_batch')}</button>`:''}
         ${gProg.totalOffset<cnt?`<button class="daily-btn" onclick="nextGrammarBatch()">${t('next_batch')}</button>`:''}
@@ -2478,7 +2618,7 @@ function render() {
       h += `<div class="gc" id="${d.id}"><div class="gh" onclick="toggleCard(this)"><span class="gn">${idx}</span><span class="gt">${d.t}</span><svg class="star ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav('${d.id}')" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div><div class="gb"><div class="gx"><div class="pt">${d.p}</div><div class="ep">${cvt(d.ex)}</div><div class="eg">${d.eg.map(e=>{
         const pureJ = e.j.replace(/<[^>]+>/g,'').replace(/'/g,"\\'");
         return `<div class="ex"><div class="j">${e.j}<svg class="ex-spk" onclick="event.stopPropagation();speak('${pureJ}')" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/></svg></div><div class="z">${cvt(e.z)}</div></div>`;
-      }).join('')}</div>${d.n?`<div class="nt">${cvt(d.n)}</div>`:''}<a class="gc-report" href="${reportUrl}" target="_blank" rel="noopener">${t('report_error')}</a></div></div></div>`;
+      }).join('')}</div>${d.n?`<div class="nt">${cvt(d.n)}</div>`:''}<div class="gm-marks"><button class="gm-btn weak ${WeakGrammar.isWeak(d.id)?'on':''}" data-gid="${d.id}" onclick="event.stopPropagation();WeakGrammar.toggleWeak('${d.id}');this.classList.toggle('on')">✗ 不熟</button><button class="gm-btn known" onclick="event.stopPropagation();WeakGrammar.markKnown('${d.id}');this.parentNode.querySelector('.gm-btn.weak').classList.remove('on')">✓ 我會了</button></div><a class="gc-report" href="${reportUrl}" target="_blank" rel="noopener">${t('report_error')}</a></div></div></div>`;
     });
     h += '</section>';
   });
