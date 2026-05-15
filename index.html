@@ -1780,17 +1780,26 @@ const Shadow = (() => {
           const repeatMs = Math.max(1200, item.j.length * 200 / speed);
           pendingTimer = setTimeout(() => { pendingTimer = null; stage = 2; step(); }, repeatMs);
         } else {
-          stage = 3; step();
+          // 跟讀停頓關閉：一次播完直接下一句
+          stage = 4; step();
         }
       });
     } else if (stage === 2) {
       setStatus('🔊 再播一次');
       playOnce(item.j, () => {
         if (paused) return;
-        stage = 3; step();
+        if (repeatWindow) {
+          stage = 3;
+          setStatus('🎤 再跟著念一次…');
+          const repeatMs = Math.max(1200, item.j.length * 200 / speed);
+          pendingTimer = setTimeout(() => { pendingTimer = null; stage = 4; step(); }, repeatMs);
+        } else {
+          stage = 4; step();
+        }
       });
-    } else if (stage === 3) {
-      pendingTimer = setTimeout(() => { pendingTimer = null; idx++; stage = 0; if (idx < queue.length) step(); else exit(true); }, 600);
+    } else if (stage === 4) {
+      // 句末短間隔後切下句
+      pendingTimer = setTimeout(() => { pendingTimer = null; idx++; stage = 0; if (idx < queue.length) step(); else exit(true); }, 400);
     }
   }
 
