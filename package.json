@@ -7,7 +7,8 @@
     "validate": "node scripts/validate.js",
     "check-readings": "node scripts/check-readings.js",
     "tts:collect": "node scripts/tts/collect.mjs",
-    "tts:generate": "node scripts/tts/generate.mjs"
+    "tts:generate": "node scripts/tts/generate.mjs",
+    "usage:generate": "node scripts/usage/generate.mjs"
   },
   "dependencies": {
     "kuromoji": "^0.1.2"
