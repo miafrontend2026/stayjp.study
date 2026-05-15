@@ -1729,7 +1729,10 @@ const Shadow = (() => {
 
   function clearTimer() {
     if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
-    if (audioEl) { try { audioEl.onended = null; audioEl.pause(); } catch (e) {} audioEl = null; }
+    if (audioEl) {
+      try { audioEl.onended = null; audioEl.onerror = null; audioEl.pause(); } catch (e) {}
+      // 不 null — 保留 Audio 元素重用，避免 iOS rate limit
+    }
     if (window.speechSynthesis) speechSynthesis.cancel();
   }
 
@@ -1739,22 +1742,22 @@ const Shadow = (() => {
     let finished = false;
     const safeEnd = () => {
       if (finished) return; finished = true;
-      audioEl = null;
       if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
       onEnd && onEnd();
     };
     if (hash) {
-      audioEl = new Audio('audio/tts/' + hash + '.mp3');
-      audioEl.playbackRate = speed;
+      // 重用單一 Audio 元素：iOS / 部分瀏覽器對短時間內連續 new Audio() 會 rate limit，
+      // 改 src 比 new 更穩，能保證第二輪也播得出聲。
+      if (!audioEl) audioEl = new Audio();
       audioEl.onended = safeEnd;
       audioEl.onerror = safeEnd;
-      // Safety net：若 audio 載不到 / 靜默失敗，按文字長度估時間 +50% 緩衝後強制收尾
-      // 不讓 state machine 卡死。
+      audioEl.src = 'audio/tts/' + hash + '.mp3';
+      audioEl.playbackRate = speed;
+      audioEl.currentTime = 0;
       const fallbackMs = Math.max(3000, text.length * 250 / speed);
       pendingTimer = setTimeout(safeEnd, fallbackMs);
       audioEl.play()
         .then(() => {
-          // 真實播放長度抓到後，把 fallback 校準成「實際長度 + 500ms」
           if (audioEl && isFinite(audioEl.duration) && audioEl.duration > 0) {
             if (pendingTimer) clearTimeout(pendingTimer);
             pendingTimer = setTimeout(safeEnd, (audioEl.duration / speed) * 1000 + 500);
