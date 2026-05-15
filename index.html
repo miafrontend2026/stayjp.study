@@ -1701,16 +1701,35 @@ const Shadow = (() => {
   function playOnce(text, onEnd) {
     if (paused) return;
     const hash = window.__TTS && window.__TTS[text];
+    let finished = false;
+    const safeEnd = () => {
+      if (finished) return; finished = true;
+      audioEl = null;
+      if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+      onEnd && onEnd();
+    };
     if (hash) {
       audioEl = new Audio('audio/tts/' + hash + '.mp3');
       audioEl.playbackRate = speed;
-      audioEl.onended = () => { audioEl = null; onEnd && onEnd(); };
-      audioEl.play().catch(() => { audioEl = null; onEnd && onEnd(); });
+      audioEl.onended = safeEnd;
+      audioEl.onerror = safeEnd;
+      // Safety net：若 audio 載不到 / 靜默失敗，按文字長度估時間 +50% 緩衝後強制收尾
+      // 不讓 state machine 卡死。
+      const fallbackMs = Math.max(3000, text.length * 250 / speed);
+      pendingTimer = setTimeout(safeEnd, fallbackMs);
+      audioEl.play()
+        .then(() => {
+          // 真實播放長度抓到後，把 fallback 校準成「實際長度 + 500ms」
+          if (audioEl && isFinite(audioEl.duration) && audioEl.duration > 0) {
+            if (pendingTimer) clearTimeout(pendingTimer);
+            pendingTimer = setTimeout(safeEnd, (audioEl.duration / speed) * 1000 + 500);
+          }
+        })
+        .catch(safeEnd);
     } else {
-      // Browser TTS — no reliable end event for our use; estimate duration.
       speakBrowser(text);
       const ms = Math.max(1200, text.length * 180 / speed);
-      pendingTimer = setTimeout(() => { pendingTimer = null; onEnd && onEnd(); }, ms);
+      pendingTimer = setTimeout(safeEnd, ms);
     }
   }
 
