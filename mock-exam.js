@@ -264,19 +264,23 @@ const MockExam = (() => {
       });
     });
 
-    // Type 4: 用法 (5 questions)
+    // Type 4: 中→日 詞彙選擇 (5 questions)
+    // 原本 用法 題型靠模板套句子，沒有 curated 內容容易產出 4 個一樣的選項，
+    // 改成 Type 3 的反向：給中譯選對應日文，純資料驅動可靠。
     const t4words = shuffle(allWords).slice(0, 5);
     t4words.forEach(word => {
-      const usage = generateUsageSentences(word, vocab);
+      const wrongs = shuffle(vocab.filter(w => w.w !== word.w && w.m !== word.m))
+        .slice(0, 3).map(w => word.w !== word.r ? (w.w + '（' + w.r + '）') : w.w);
+      const correct = word.w !== word.r ? (word.w + '（' + word.r + '）') : word.w;
+      const opts = shuffle([correct, ...wrongs]);
       questions.push({
         type: 4,
-        typeName: '用法',
-        prompt: '以下哪個句子中「' + word.w + '」（' + word.m + '）的用法正確？',
+        typeName: '中→日',
+        prompt: '以下哪個是「' + word.m + '」的日文？',
         display: '',
-        options: usage.sentences.map(s => s.text),
-        correctIdx: usage.correctIdx,
+        options: opts,
+        correctIdx: opts.indexOf(correct),
         word: word,
-        isHTML: true,
       });
     });
 
