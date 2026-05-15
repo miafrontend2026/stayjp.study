@@ -1729,10 +1729,7 @@ const Shadow = (() => {
 
   function clearTimer() {
     if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
-    if (audioEl) {
-      try { audioEl.onended = null; audioEl.onerror = null; audioEl.pause(); } catch (e) {}
-      // 不 null — 保留 Audio 元素重用，避免 iOS rate limit
-    }
+    if (audioEl) { try { audioEl.onended = null; audioEl.pause(); } catch (e) {} audioEl = null; }
     if (window.speechSynthesis) speechSynthesis.cancel();
   }
 
@@ -1742,18 +1739,15 @@ const Shadow = (() => {
     let finished = false;
     const safeEnd = () => {
       if (finished) return; finished = true;
+      audioEl = null;
       if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
       onEnd && onEnd();
     };
     if (hash) {
-      // 重用單一 Audio 元素：iOS / 部分瀏覽器對短時間內連續 new Audio() 會 rate limit，
-      // 改 src 比 new 更穩，能保證第二輪也播得出聲。
-      if (!audioEl) audioEl = new Audio();
+      audioEl = new Audio('audio/tts/' + hash + '.mp3');
+      audioEl.playbackRate = speed;
       audioEl.onended = safeEnd;
       audioEl.onerror = safeEnd;
-      audioEl.src = 'audio/tts/' + hash + '.mp3';
-      audioEl.playbackRate = speed;
-      audioEl.currentTime = 0;
       const fallbackMs = Math.max(3000, text.length * 250 / speed);
       pendingTimer = setTimeout(safeEnd, fallbackMs);
       audioEl.play()
