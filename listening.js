@@ -1,6 +1,7 @@
 // ========== LISTENING PRACTICE ==========
 const Listening = (() => {
   const SCORE_KEY = 'listening_scores';
+  const DONE_KEY = 'listening_done';  // { [item.id]: timestamp } — 答過的題目不再出現
   let currentItem = null;
   let replaysLeft = 2;
   let score = 0;
@@ -723,6 +724,25 @@ const Listening = (() => {
   // ── helpers ──
   function getScores() { try { return JSON.parse(localStorage.getItem(SCORE_KEY)) || {}; } catch(e) { return {}; } }
   function saveScores(d) { localStorage.setItem(SCORE_KEY, JSON.stringify(d)); }
+  function getDone() { try { return JSON.parse(localStorage.getItem(DONE_KEY)) || {}; } catch(e) { return {}; } }
+  function saveDone(d) {
+    localStorage.setItem(DONE_KEY, JSON.stringify(d));
+    if (typeof saveAllCloud === 'function') saveAllCloud();
+  }
+  function markDone(id) { const d = getDone(); d[id] = Date.now(); saveDone(d); }
+  function resetDone(level) {
+    if (!level) { localStorage.removeItem(DONE_KEY); if (typeof saveAllCloud === 'function') saveAllCloud(); return; }
+    const d = getDone();
+    // 只清掉該等級的 id（id 格式：l-n5-1, l-n4-3...）
+    const prefix = 'l-' + level + '-';
+    Object.keys(d).forEach(k => { if (k.startsWith(prefix)) delete d[k]; });
+    saveDone(d);
+  }
+  function doneCountFor(level) {
+    const d = getDone();
+    const prefix = 'l-' + level + '-';
+    return Object.keys(d).filter(k => k.startsWith(prefix)).length;
+  }
 
   let __lsAudio = null;
   let __lsToken = 0;  // 每次呼叫 speakText 加 1，用來作廢「play() pending 中卻被新呼叫蓋掉」的舊音
@@ -773,7 +793,9 @@ const Listening = (() => {
     const levelStats = ['n5','n4','n3','n2','n1'].map(lv => {
       const s = scores[lv] || { correct: 0, total: 0 };
       const pct = s.total ? Math.round(s.correct / s.total * 100) : 0;
-      return `<span style="font-size:11px;color:var(--tx2)">${lv.toUpperCase()}: ${s.correct}/${s.total} (${pct}%)</span>`;
+      const total = items.filter(i => i.level === lv).length;
+      const done = doneCountFor(lv);
+      return `<span style="font-size:11px;color:var(--tx2)">${lv.toUpperCase()}: ${done}/${total}題已答 · ${s.correct}/${s.total} 正確 (${pct}%)</span>`;
     }).join(' ');
 
     box.innerHTML = `
@@ -795,9 +817,12 @@ const Listening = (() => {
         <button class="on" data-v="test">${t('ls_mode_test')}</button>
         <button data-v="practice">${t('ls_mode_practice')}</button>
       </div></div>
-      <div style="margin:10px 0;display:flex;flex-wrap:wrap;gap:4px">${levelStats}</div>
+      <div style="margin:10px 0;display:flex;flex-direction:column;gap:3px">${levelStats}</div>
       <button class="qstart" onclick="Listening.begin()">${t('ls_start')}</button>
-      <button class="qclose" onclick="Listening.close()">${t('ls_cancel')}</button>`;
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="qclose" style="flex:1;margin:0" onclick="Listening.close()">${t('ls_cancel')}</button>
+        <button class="qclose" style="flex:1;margin:0;color:var(--ac)" onclick="Listening.resetCurrent()" title="重置目前選擇等級的已答記錄">↺ 重置進度</button>
+      </div>`;
     box.querySelectorAll('.qo').forEach(g => {
       g.querySelectorAll('button').forEach(b => {
         b.onclick = () => { g.querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); };
@@ -823,13 +848,21 @@ const Listening = (() => {
     const pool = items.filter(i => i.level === selectedLevel);
     if (!pool.length) { alert(t('ls_no_data')); return; }
 
-    const wantCount = lastCountVal === 'all' ? pool.length : Math.min(parseInt(lastCountVal), pool.length);
-    // 先排除上一輪的；若剩下不夠才從上一輪挑補滿（avoid 連續兩輪完全一樣）
-    const unseen = pool.filter(i => !lastBatchIds.includes(i.id));
-    const seen = pool.filter(i => lastBatchIds.includes(i.id));
-    const shuffledUnseen = [...unseen].sort(() => Math.random() - 0.5);
-    const shuffledSeen = [...seen].sort(() => Math.random() - 0.5);
-    queue = [...shuffledUnseen, ...shuffledSeen].slice(0, wantCount);
+    // 排除已答過的題目 — 用完了才允許 fallback 到全 pool（重複舊題）
+    const done = getDone();
+    let available = pool.filter(i => !done[i.id]);
+    let exhausted = false;
+    if (available.length === 0) {
+      // 全部題目都答過了 — 提示使用者並用全 pool（或返回讓使用者重置）
+      if (!confirm('🎉 你已完成這個等級的所有題目！\n按「確定」重置進度從頭再來，按「取消」回到設定頁。')) return;
+      resetDone(selectedLevel);
+      available = pool.slice();
+      exhausted = true;
+    }
+
+    const wantCount = lastCountVal === 'all' ? available.length : Math.min(parseInt(lastCountVal), available.length);
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
+    queue = shuffled.slice(0, wantCount);
     lastBatchIds = queue.map(q => q.id);
 
     score = 0;
@@ -938,6 +971,7 @@ const Listening = (() => {
     const correct = optIdx === item.correct;
     if (correct) score++;
     answered.push({ q: item.q, correct, type: item.type });
+    markDone(item.id);  // 答過就標記，下輪不再抽到
 
     const opts = document.querySelectorAll('#lsOpts .qopt');
     opts.forEach((b, i) => {
@@ -993,5 +1027,14 @@ const Listening = (() => {
     document.getElementById('quizBg').classList.remove('show');
   }
 
-  return { start, begin, retrySame, play, setSpeed, answer, renderItem, showResults, close };
+  function resetCurrent() {
+    const lvEl = document.querySelector('#lsLevel .on');
+    const lv = lvEl ? lvEl.dataset.v : selectedLevel;
+    const done = doneCountFor(lv);
+    if (!done) { alert(`${lv.toUpperCase()} 還沒答過任何題目，沒東西可以重置。`); return; }
+    if (!confirm(`確定要重置 ${lv.toUpperCase()} 的已答記錄嗎？\n（${done} 題會重新加入抽題池）`)) return;
+    resetDone(lv);
+    start();  // 重新渲染 start 畫面，更新計數
+  }
+  return { start, begin, retrySame, play, setSpeed, answer, renderItem, showResults, close, resetCurrent };
 })();
