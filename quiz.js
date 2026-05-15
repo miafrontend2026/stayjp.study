@@ -6,6 +6,7 @@ const Quiz = (() => {
   let results = [];
   let quizType = 'word2meaning';
   let quizLevel = 'n5';
+  let quizRange = 'all';  // 'all' 全部 | 'today' 今日學習
   let showKanji = false; // word2meaning 題型：預設隱藏漢字（較難、測真實能力）
 
   function start() {
@@ -20,6 +21,10 @@ const Quiz = (() => {
         <button class="on" data-v="word2meaning">${t('type_ja_zh')}</button>
         <button data-v="meaning2word">${t('type_zh_ja')}</button>
         <button data-v="reading">${t('type_reading')}</button>
+      </div></div>
+      <div class="qf"><label>範圍</label><div class="qo" id="qRange">
+        <button class="on" data-v="all">全部</button>
+        <button data-v="today">📚 今日學習</button>
       </div></div>
       <div class="qf"><label>${t('quiz_count')}</label><div class="qo" id="qCount">
         <button data-v="10">10</button><button class="on" data-v="20">20</button><button data-v="50">50</button>
@@ -37,25 +42,43 @@ const Quiz = (() => {
   function begin() {
     const lvEl = document.querySelector('#qLevel .on');
     const tyEl = document.querySelector('#qType .on');
+    const rgEl = document.querySelector('#qRange .on');
     const ctEl = document.querySelector('#qCount .on');
-    // If called from results page (no selectors), reuse last settings
     if (lvEl) quizLevel = lvEl.dataset.v;
     if (tyEl) quizType = tyEl.dataset.v;
+    if (rgEl) quizRange = rgEl.dataset.v;
     const count = ctEl ? parseInt(ctEl.dataset.v) : (questions.length || 20);
     const data = getVocabData(quizLevel);
     if (!data || !data.length) { alert(t('quiz_no_data')); return; }
+
+    // 「今日學習」範圍 = daily-bar 顯示的當前批次（offset ~ offset+DAILY_NEW）
+    let source = data;
+    if (quizRange === 'today') {
+      if (typeof getDailyProgress !== 'function' || typeof DAILY_NEW === 'undefined') {
+        alert('找不到今日學習資料，請改用「全部」'); return;
+      }
+      const prog = getDailyProgress(quizLevel);
+      source = data.slice(prog.totalOffset, prog.totalOffset + DAILY_NEW);
+      if (!source.length) {
+        alert('今日還沒學任何單字，請先到單字模式開始學習，或選「全部」範圍。');
+        return;
+      }
+    }
     score = 0; current = 0; results = [];
-    questions = generate(data, count);
+    // generate 用 source 當題目來源，但錯誤選項仍從 data（全 pool）抽 — 維持挑戰性
+    questions = generate(source, data, Math.min(count, source.length));
     renderQ();
   }
 
-  function generate(data, count) {
+  function generate(source, distractorPool, count) {
+    // 兼容舊呼叫：如果只傳 1~2 個參數，補成同個 pool
+    if (count === undefined) { count = distractorPool; distractorPool = source; }
     // 選讀音題型：排除純假名詞（w === r），否則題目和正解同形沒意義
-    const source = quizType === 'reading' ? data.filter(d => d.w !== d.r) : data;
-    const shuffled = [...source].sort(() => Math.random() - 0.5);
+    const filtered = quizType === 'reading' ? source.filter(d => d.w !== d.r) : source;
+    const shuffled = [...filtered].sort(() => Math.random() - 0.5);
     const picked = shuffled.slice(0, Math.min(count, shuffled.length));
     return picked.map(word => {
-      const pool = data.filter(d => {
+      const pool = distractorPool.filter(d => {
         if (quizType === 'word2meaning') return d.m !== word.m;
         if (quizType === 'meaning2word') return d.w !== word.w;
         return d.r !== word.r;
