@@ -397,6 +397,10 @@ select::-ms-expand { display: none; }
 .shadow-box { background: var(--bg2); border: 1px solid var(--bd); border-radius: 20px; padding: 36px 32px; max-width: 600px; width: 100%; text-align: center; position: relative; }
 .shadow-close { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border: none; background: transparent; color: var(--tx2); font-size: 18px; cursor: pointer; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; transition: background .15s, color .15s; }
 .shadow-close:hover { background: var(--bg3); color: var(--tx); }
+.shadow-fav { position: absolute; top: 12px; left: 12px; width: 36px; height: 36px; border: none; background: transparent; color: var(--tx2); cursor: pointer; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; transition: color .15s, background .15s; }
+.shadow-fav:hover { background: var(--bg3); }
+.shadow-fav.on { color: #F5B400; }
+.shadow-fav.on svg { fill: #F5B400; stroke: #F5B400; }
 .shadow-progress { font-size: 13px; color: var(--tx2); font-weight: 600; letter-spacing: .05em; }
 .shadow-status { font-size: 14px; color: var(--ac); font-weight: 600; margin-top: 8px; }
 .shadow-j { font-size: clamp(22px, 4vw, 32px); font-weight: 700; line-height: 1.6; color: var(--tx); margin: 24px 0 12px; min-height: 1.6em; }
@@ -1174,6 +1178,7 @@ select::-ms-expand { display: none; }
   <button class="more-item" onclick="closeMore();GrammarDrill.start()" data-i18n="grammar_drill">文法練習</button>
   <button class="more-item" onclick="closeMore();Reading.start()" data-i18n="reading_practice">讀解練習</button>
   <button class="more-item" onclick="closeMore();Listening.start()" data-i18n="listening_practice">聽力練習</button>
+  <button class="more-item" onclick="closeMore();Shadow.startFavs()">⭐ 跟讀我的收藏</button>
   <a class="more-item" href="verbs.html" data-i18n="verb_conjugation">動詞變化</a>
   <a class="more-item" href="contact.html" data-i18n="feedback">意見回饋</a>
   <hr style="border:none;border-top:1px solid var(--bd);margin:4px 0">
@@ -1470,7 +1475,7 @@ function saveSRSCloud() {
   db.collection('users').doc(currentUser.uid).set({ srs_data: d }, { merge: true });
 }
 // ── Sync ALL data ──
-const SYNC_KEYS = ['study_log','word_notebook','grammar_srs','grammar_weak','daily_progress','mock_exam_history','exam_date','base_level','goal_level','reading_done','listening_scores','listening_done'];
+const SYNC_KEYS = ['study_log','word_notebook','grammar_srs','grammar_weak','daily_progress','mock_exam_history','exam_date','base_level','goal_level','reading_done','listening_scores','listening_done','shadow_favs'];
 function saveAllCloud() {
   if (!currentUser || !db) return;
   const payload = {};
@@ -1623,6 +1628,7 @@ const Shadow = (() => {
     mask.className = 'cc-mask shadow-mask';
     mask.innerHTML = `<div class="shadow-box">
       <button class="shadow-close" data-act="exit" title="退出 (Esc)" aria-label="關閉">✕</button>
+      <button class="shadow-fav" id="shadowFav" data-act="fav" title="收藏這句（F）" aria-label="收藏"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></button>
       <div class="shadow-progress"><span id="shadowIdx">1</span> / <span id="shadowTotal">${queue.length}</span></div>
       <div class="shadow-status" id="shadowStatus">🔊 播放中</div>
       <div class="shadow-j" id="shadowJ"></div>
@@ -1642,11 +1648,14 @@ const Shadow = (() => {
     document.body.appendChild(mask);
     requestAnimationFrame(() => mask.classList.add('on'));
     mask.addEventListener('click', e => {
-      const act = e.target.dataset && e.target.dataset.act;
+      // 點按鈕本體或內部 svg / path 都算
+      const btn = e.target.closest('[data-act]');
+      const act = btn && btn.dataset.act;
       if (act === 'prev') prev();
       else if (act === 'next') next();
       else if (act === 'replay') replay();
       else if (act === 'toggle') togglePause();
+      else if (act === 'fav') toggleFavCurrent();
       else if (act === 'exit') exit();
     });
     document.getElementById('shadowSpeed').addEventListener('change', e => {
@@ -1671,7 +1680,32 @@ const Shadow = (() => {
     else if (e.key === 'ArrowRight') next();
     else if (e.key === 'ArrowLeft') prev();
     else if (e.key === 'r' || e.key === 'R') replay();
+    else if (e.key === 'f' || e.key === 'F') toggleFavCurrent();
     else if (e.key === 'Escape') exit();
+  }
+
+  // === 收藏：跨 session 的不熟句子清單 ===
+  const FAV_KEY = 'shadow_favs';  // { [j]: { j, z, ts } }
+  function loadFavs() { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || {}; } catch(e) { return {}; } }
+  function saveFavs(d) {
+    localStorage.setItem(FAV_KEY, JSON.stringify(d));
+    if (typeof saveAllCloud === 'function') saveAllCloud();
+  }
+  function isFav(j) { return !!loadFavs()[j]; }
+  function toggleFavCurrent() {
+    const item = queue[idx]; if (!item) return;
+    const d = loadFavs();
+    if (d[item.j]) delete d[item.j];
+    else d[item.j] = { j: item.j, z: item.z || '', ts: Date.now() };
+    saveFavs(d);
+    updateFavBtn();
+  }
+  function updateFavBtn() {
+    const btn = document.getElementById('shadowFav');
+    if (!btn) return;
+    const item = queue[idx];
+    btn.classList.toggle('on', !!(item && isFav(item.j)));
+    btn.setAttribute('title', isFav(item ? item.j : '') ? '已收藏（F 取消）' : '收藏這句（F）');
   }
 
   function renderItem() {
@@ -1683,6 +1717,7 @@ const Shadow = (() => {
     idxEl.textContent = idx + 1;
     jEl.textContent = item.j;
     zEl.textContent = item.z || '';
+    updateFavBtn();
   }
 
   function setStatus(s) {
@@ -1825,7 +1860,18 @@ const Shadow = (() => {
     start(items);
   }
 
-  return { startCurrent, start };
+  // 跟讀我的收藏：從 shadow_favs 撈出所有收藏句，洗牌後播放
+  function startFavs() {
+    const d = loadFavs();
+    const items = Object.values(d).map(f => ({ j: f.j, z: f.z || '' }));
+    if (!items.length) { alert('還沒收藏任何句子。在跟讀模式按 ⭐ 或 F 鍵可加入。'); return; }
+    items.sort(() => Math.random() - 0.5);
+    start(items);
+  }
+
+  function favCount() { return Object.keys(loadFavs()).length; }
+
+  return { startCurrent, startFavs, start, favCount };
 })();
 
 // ========== WEAK GRAMMAR (不熟標記 + 小考) ==========
